@@ -85,23 +85,41 @@ function startAnalyse_Callback(hObject, eventdata, handles)
 waar = true;
 
 start(handles.vid);
+data = getdata(handles.vid, 1);
+
 axes(handles.axes1);
-image(getdata(handles.vid, 1));
+image(data);
+
+axes(handles.axes2);
+image(data);
+
+axes(handles.axes3);
+image(data);
+
+axes(handles.axes4);
+image(data);
+
 while waar
-    n = normalise(getdata(handles.vid, 1));
+    data = getdata(handles.vid, 2);
+    
+    n = normalise(data(:,:,:,2));
     s = segmentation(n);
     l = label(s);
     p = property(l);
     c = classification(p);
     t = count(c);
     
-
-    data = getdata(handles.vid, 2);
-	% Obtain absolute difference
-	diff_im = data(:,:,:,2);
-    
 	h = get(handles.axes1, 'Children');
-	set(h, 'CData', diff_im);
+	set(h, 'CData', t);
+    
+    h = get(handles.axes2, 'Children');
+	set(h, 'CData', n);
+    
+    h = get(handles.axes3, 'Children');
+	set(h, 'CData', s);
+    
+    h = get(handles.axes4, 'Children');
+	set(h, 'CData', l);
     
 end
 
