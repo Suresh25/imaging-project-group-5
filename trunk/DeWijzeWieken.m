@@ -51,9 +51,10 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
-vid = videoinput('winvideo');
+vid = videoinput('winvideo', 1, 'RGB24_320x240');
 set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
+set(vid, 'ReturnedColorSpace','RGB');
 handles.vid = vid;
 
 global waar;
@@ -64,6 +65,8 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+dipstart;
 
 % UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -114,7 +117,7 @@ while waar == true
     t = count(c);
     
 	h = get(handles.axes1, 'Children');
-	set(h, 'CData', t);
+	set(h, 'CData', data(:,:,:,2));
     
     h = get(handles.axes2, 'Children');
 	set(h, 'CData', n);
@@ -155,6 +158,9 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % Stop the video stream
+global waar;
+waar = false;
+
 stop(handles.vid);
 
 delete(hObject);
