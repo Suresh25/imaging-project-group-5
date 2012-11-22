@@ -126,7 +126,7 @@ while waar == true
 	set(h, 'CData', n);
     
     h = get(handles.axes4, 'Children');
-	set(h, 'CData', s);
+	set(h, 'CData', uint8(s));
     
 end
 
