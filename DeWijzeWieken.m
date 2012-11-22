@@ -117,16 +117,16 @@ while waar == true
     t = count(c);
     
 	h = get(handles.axes1, 'Children');
-	set(h, 'CData', n);
+	set(h, 'CData', l);
     
     h = get(handles.axes2, 'Children');
 	set(h, 'CData', data(:,:,:,2));
     
     h = get(handles.axes3, 'Children');
-	set(h, 'CData', s);
+	set(h, 'CData', n);
     
     h = get(handles.axes4, 'Children');
-	set(h, 'CData', l);
+	set(h, 'CData', s);
     
 end
 
