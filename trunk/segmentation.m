@@ -1,2 +1,16 @@
 function res = segmentation(a)
-res = a;
+b = joinchannels('rgb', dip_image(a));
+c = b{1};
+d = b{2};
+e = b{3};
+redThreshold = 130:70:200;
+greenThreshold = 20:30:50;
+blueThreshold = 20:30:50;
+r = threshold(c,'double',redThreshold);
+g = threshold(d,'double',greenThreshold);
+h = threshold(e,'double',blueThreshold);
+rghCombo = r&g&h;
+%labeled_img = label(rghCombo, Inf, 200, 0);
+%res = uint8(labeled_img);
+thresHoldImg = uint8(rghCombo);
+res = thresHoldImg;
