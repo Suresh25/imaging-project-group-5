@@ -108,7 +108,7 @@ while waar == true
     
     n = normalise(data(:,:,:,2));
     s = segmentation(n);
-    l = label(s);
+    l = labeling(s);
     p = property(l);
     c = classification(p);
     t = count(c);
