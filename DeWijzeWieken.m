@@ -56,6 +56,9 @@ set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
 handles.vid = vid;
 
+global waar;
+waar = false;
+
 % Choose default command line output for DeWijzeWieken
 handles.output = hObject;
 
@@ -82,6 +85,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to startAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global waar;
 waar = true;
 
 start(handles.vid);
@@ -99,7 +103,7 @@ image(data);
 axes(handles.axes4);
 image(data);
 
-while waar
+while waar == true
     data = getdata(handles.vid, 2);
     
     n = normalise(data(:,:,:,2));
@@ -123,6 +127,7 @@ while waar
     
 end
 
+stop(handles.vid);
 
 
 % --- Executes on button press in stopAnalyse.
@@ -130,8 +135,16 @@ function stopAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to stopAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+clear handles.vid;
+
+global waar;
 waar = false;
-stop(handles.vid);
+
+guidata(hObject, handles);
+
+
+
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
