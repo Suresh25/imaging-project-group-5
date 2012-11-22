@@ -93,7 +93,7 @@ while waar
     l = label(s);
     p = property(l);
     c = classification(p);
-    t = count(c)
+    t = count(c);
     
 
     data = getdata(handles.vid, 2);
