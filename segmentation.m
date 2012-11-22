@@ -1,2 +1,2 @@
-function res = segmataion(a)
+function res = segmatation(a)
 res = a;
