@@ -86,23 +86,15 @@ waar = true;
 
 start(handles.vid);
 axes(handles.axes1);
-image(getdata(handles.vid, 1));
 while waar
-    n = normalise(getdata(handles.vid, 1));
-    s = segmentation(n);
-    l = label(s);
-    p = property(l);
-    c = classification(p);
-    t = count(c)
+    normalise(getdata(handles.vid, 1));
+    segment(getdata(handles.vid, 1));
+    label(getdata(handles.vid, 1));
+    properties(getdata(handles.vid, 1));
+    classify(getdata(handles.vid, 1));
+    count(getdata(handles.vid, 1))
     
-
-    data = getdata(handles.vid, 2);
-	% Obtain absolute difference
-	diff_im = data(:,:,:,2);
-    
-	h = get(handles.axes1, 'Children');
-	set(h, 'CData', diff_im);
-    
+    image(getdata(handles.vid, 1));
 end
 
 
