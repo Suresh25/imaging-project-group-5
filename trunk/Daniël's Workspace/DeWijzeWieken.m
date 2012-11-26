@@ -51,9 +51,10 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
-vid = videoinput('winvideo');
+vid = videoinput('winvideo', 1, 'RGB24_320x240');
 set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
+set(vid, 'ReturnedColorSpace','RGB');
 handles.vid = vid;
 
 global waar;
@@ -64,6 +65,8 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+dipstart;
 
 % UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -85,7 +88,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to startAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%global waar;
+global waar;
 waar = true;
 
 start(handles.vid);
@@ -104,22 +107,26 @@ axes(handles.axes4);
 image(data);
 
 while waar == true
-    data = getdata(handles.vid, 1);
+    data = getdata(handles.vid, 2);
     
-    %n = normalise(data(:,:,:,2));
-    s = segmentation(data);
-    %p = property(s);
-    %c = classification(p);
-    %t = count(c);
+    n = normalise(data(:,:,:,2));
+    s = segmentation(n);
+    l = labeling(s);
+    p = property(l);
+    c = classification(p);
+    t = count(c);
     
-	%h = get(handles.axes1, 'Children');
-	%set(h, 'CData', t);
+	h = get(handles.axes1, 'Children');
+	set(h, 'CData', l);
     
-    %h = get(handles.axes2, 'Children');
-	%set(h, 'CData', n);
+    h = get(handles.axes2, 'Children');
+	set(h, 'CData', data(:,:,:,2));
     
     h = get(handles.axes3, 'Children');
-	set(h, 'CData', s);
+	set(h, 'CData', n);
+    
+    h = get(handles.axes4, 'Children');
+	set(h, 'CData', uint8(s));
     
 end
 
@@ -134,7 +141,7 @@ function stopAnalyse_Callback(hObject, eventdata, handles)
 
 clear handles.vid;
 
-%global waar;
+global waar;
 waar = false;
 
 guidata(hObject, handles);
@@ -151,6 +158,9 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % Stop the video stream
+global waar;
+waar = false;
+
 stop(handles.vid);
 
 delete(hObject);
