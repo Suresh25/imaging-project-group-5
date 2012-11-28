@@ -51,16 +51,22 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
-vid = videoinput('winvideo');
+vid = videoinput('winvideo', 1, 'RGB24_320x240');
 set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
+set(vid, 'ReturnedColorSpace','RGB');
 handles.vid = vid;
+
+handles.running = true;
 
 % Choose default command line output for DeWijzeWieken
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+% Initialise DIPimage
+dipstart;
 
 % UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -82,14 +88,49 @@ function startAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to startAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global waar;
 waar = true;
 
 start(handles.vid);
+data = getdata(handles.vid, 1);
+
 axes(handles.axes1);
-while waar
-image(getdata(handles.vid, 1));
+image(data);
+
+axes(handles.axes2);
+image(data);
+
+axes(handles.axes3);
+image(data);
+
+axes(handles.axes4);
+image(data);
+
+while waar == true
+    data = getdata(handles.vid, 2);
+    
+    n = normalise(data(:,:,:,2));
+    s = segmentation(n);
+    %l = labeling(s);
+    %p = property(l);
+    %c = classification(p);
+    %t = count(c);
+    
+	h = get(handles.axes1, 'Children');
+	%set(h, 'CData', l);
+    
+    h = get(handles.axes2, 'Children');
+	%set(h, 'CData', data(:,:,:,2));
+    
+    h = get(handles.axes3, 'Children');
+	%set(h, 'CData', n);
+    
+    h = get(handles.axes4, 'Children');
+	set(h, 'CData', toMatrix(3, s));
+    
 end
 
+stop(handles.vid);
 
 
 % --- Executes on button press in stopAnalyse.
@@ -97,8 +138,16 @@ function stopAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to stopAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+clear handles.vid;
+
+global waar;
 waar = false;
-stop(handles.vid);
+
+guidata(hObject, handles);
+
+
+
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
@@ -109,6 +158,9 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 
 % Stop the video stream
+global waar;
+waar = false;
+
 stop(handles.vid);
 
 delete(hObject);
