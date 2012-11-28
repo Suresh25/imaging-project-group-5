@@ -16,4 +16,4 @@ rghCombo = r*g*h
 %rghComboEnhanced = erosion(rghCombo, 12, 'elliptic');
 rghCombo_labeled = label(rghCombo,Inf,400,0)
 %rghCombo_labeled = label(rghComboEnhanced,Inf,400,0)
-clear vid;
+%clear vid;
