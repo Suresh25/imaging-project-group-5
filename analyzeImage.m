@@ -12,8 +12,16 @@ g = threshold(c,'double',greenThreshold)
 h = threshold(d,'double',blueThreshold)
 %rghCombo = r&g&h
 rghCombo = r*g*h
-%rghComboEnhanced = dilation(rghCombo,12, 'elliptic');
-%rghComboEnhanced = erosion(rghCombo, 12, 'elliptic');
-rghCombo_labeled = label(rghCombo,Inf,400,0)
-%rghCombo_labeled = label(rghComboEnhanced,Inf,400,0)
+n = 0;
+while n < 8
+rghComboEnhanced = dilation(rghCombo,7, 'elliptic');
+n = n+1;
+end
+n = 0;
+while n < 8
+rghComboEnhanced = erosion(rghCombo, 7, 'elliptic');
+n = n+1;
+end
+%rghCombo_labeled = label(rghCombo,Inf,400,0)
+rghCombo_labeled = label(rghComboEnhanced,Inf,400,0)
 %clear vid;
