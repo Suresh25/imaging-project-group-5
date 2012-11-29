@@ -13,17 +13,17 @@ g = threshold(c,'double',greenThreshold);
 h = threshold(d,'double',blueThreshold);
 rghCombo = r&g&h;
 %rghCombo = r*g*h;
-n = 0;
-while n < 9
-rghComboEnhanced = dilation(rghCombo,6, 'elliptic');
-n = n+1;
-end
-n = 0;
-while n < 9
-rghComboEnhanced = erosion(rghCombo, 6, 'elliptic');
-n = n+1;
-end
-rghComboEnhanced = bclosing(rghComboEnhanced,7,2,1);
+%n = 0;
+%while n < 7
+rghComboEnhanced = dilation(rghCombo,2, 'elliptic');
+%n = n+1;
+%end
+%n = 0;
+%while n < 7
+rghComboEnhanced = erosion(rghCombo, 2, 'elliptic');
+%n = n+1;
+%end
+rghComboEnhanced = bclosing(rghComboEnhanced,7,-1,1);
 %rghCombo_labeled = label(rghCombo,Inf,400,0)
 rghCombo_labeled = label(rghComboEnhanced,Inf,200,0)
 %clear vid;
