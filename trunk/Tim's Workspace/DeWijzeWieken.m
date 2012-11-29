@@ -128,17 +128,22 @@ while waar == true
 	h = get(handles.axes1, 'Children');
 	set(h, 'CData', data(:,:,:,2));
     
-    colormap('Lines');
     h = get(handles.axes2, 'Children');
-	set(h, 'CData', uint8(s));
+	set(h, 'CData', data(:,:,:,2));
     %set(h, 'CData', s);
     
     h = get(handles.axes3, 'Children');
-	set(h, 'CData', data(:,:,:,2));
+    set(h, 'CData', toMatrix(3,s,s,s));
+    
+    %*h = get(handles.axes4, 'Children');
+    %temp = zeros(size(n, 1), size(n, 2), 3);
+    %temp(:,:,1) = s./255;
+    %temp(:,:,2) = s./255;
+    %temp(:,:,3) = s./255;
+	%set(h, 'CData', temp.*n);*/
     
     h = get(handles.axes4, 'Children');
-	set(h, 'CData', data(:,:,:,2));
-    
+    set(h, 'CData', toMatrix(3,s,s));
 end
 
 stop(handles.vid);
