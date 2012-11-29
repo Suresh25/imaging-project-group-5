@@ -53,7 +53,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
 imaqreset;
 
-vid = videoinput('winvideo', 1, 'RGB24_320x240');
+%vid = videoinput('winvideo', 1, 'RGB24_320x240');
+vid = videoinput('winvideo');
 set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
 %set(vid, 'ReturnedColorSpace', 'grayscale')
@@ -127,6 +128,7 @@ while waar == true
 	h = get(handles.axes1, 'Children');
 	set(h, 'CData', data(:,:,:,2));
     
+    colormap('Lines');
     h = get(handles.axes2, 'Children');
 	set(h, 'CData', uint8(s));
     %set(h, 'CData', s);
