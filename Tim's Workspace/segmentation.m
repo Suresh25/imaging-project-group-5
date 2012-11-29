@@ -1,12 +1,13 @@
 function res = segmentation(a,liftBackground)
 
-dif = abs(liftBackground-a);
+dif1 = abs(liftBackground-a);
+dif2 = abs(a-liftBackground);
 %b = joinchannels('rgb',dif);
 
-tres = 5;
+tres = 25;
 
-temp = (dif(:,:,1) > tres) | (dif(:,:,2) > tres) | (dif(:,:,3) > tres);
-res = dip_image(temp)*255;
+temp = (dif1(:,:,1) > tres) | (dif1(:,:,2) > tres) | (dif1(:,:,3) > tres) | (dif2(:,:,1) > tres) | (dif2(:,:,2) > tres) | (dif2(:,:,3) > tres);
+res = dip_image(temp);
 
 %res = dip_image(dif > 0);
 %res = difr | difg | difb;
