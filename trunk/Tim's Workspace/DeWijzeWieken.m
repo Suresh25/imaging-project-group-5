@@ -136,14 +136,14 @@ while waar == true
     set(h, 'CData', toMatrix(3,s,s,s));
     
     %*h = get(handles.axes4, 'Children');
-    %temp = zeros(size(n, 1), size(n, 2), 3);
-    %temp(:,:,1) = s./255;
-    %temp(:,:,2) = s./255;
-    %temp(:,:,3) = s./255;
+    temp = zeros(size(n, 1), size(n, 2), 3);
+    temp(:,:,1) = s;
+    temp(:,:,2) = s;
+    temp(:,:,3) = s;
 	%set(h, 'CData', temp.*n);*/
     
     h = get(handles.axes4, 'Children');
-    set(h, 'CData', toMatrix(3,s,s));
+    set(h, 'CData', n.*temp);
 end
 
 stop(handles.vid);
@@ -188,7 +188,7 @@ function backgroundCatch_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global liftBackground;
-liftBackground = getdata(handles.vid, 1);
-h = get(handles.axes2, 'Children');
-set(h, 'CData', liftBackground);
+liftBackground = normalise(getdata(handles.vid, 1));
+%h = get(handles.axes2, 'Children');
+%set(h, 'CData', liftBackground);
 %disp(liftBackground);
