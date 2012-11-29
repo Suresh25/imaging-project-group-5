@@ -42,6 +42,8 @@ tot = 125 / gemp;
 if tot > 1
     tot = 1;
 end
+
+tot = 1;
 %totm = sum(j,3)./375;
 
 a = dip_image((a.*tot));
