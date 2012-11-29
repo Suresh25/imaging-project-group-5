@@ -57,15 +57,21 @@ set(vid, 'FrameGrabInterval', 1);
 set(vid, 'ReturnedColorSpace','RGB');
 handles.vid = vid;
 
+<<<<<<< .mine
 global waar;
 waar = false;
 
+=======
+handles.running = true;
+
+>>>>>>> .r52
 % Choose default command line output for DeWijzeWieken
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
+% Initialise DIPimage
 dipstart;
 
 % UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
@@ -95,6 +101,7 @@ start(handles.vid);
 data = getdata(handles.vid, 1);
 
 axes(handles.axes1);
+<<<<<<< .mine
 image(data);
 
 axes(handles.axes2);
@@ -111,23 +118,58 @@ while waar == true
     
     n = normalise(data(:,:,:,2));
     s = segmentation(n);
-    l = labeling(s);
+    l = label(s);
     p = property(l);
     c = classification(p);
     t = count(c);
     
 	h = get(handles.axes1, 'Children');
-	set(h, 'CData', l);
+	set(h, 'CData', t);
     
     h = get(handles.axes2, 'Children');
-	set(h, 'CData', data(:,:,:,2));
-    
-    h = get(handles.axes3, 'Children');
 	set(h, 'CData', n);
     
-    h = get(handles.axes4, 'Children');
-	set(h, 'CData', uint8(s));
+    h = get(handles.axes3, 'Children');
+	set(h, 'CData', s);
     
+    h = get(handles.axes4, 'Children');
+	set(h, 'CData', l);
+    
+=======
+image(data);
+
+axes(handles.axes2);
+image(data);
+
+axes(handles.axes3);
+image(data);
+
+axes(handles.axes4);
+image(data);
+
+while waar == true
+    data = getdata(handles.vid, 2);
+    
+    n = normalise(data(:,:,:,2));
+    s = segmentation(n);
+    %l = labeling(s);
+    %p = property(l);
+    %c = classification(p);
+    %t = count(c);
+    
+	h = get(handles.axes1, 'Children');
+	%set(h, 'CData', l);
+    
+    h = get(handles.axes2, 'Children');
+	%set(h, 'CData', data(:,:,:,2));
+    
+    h = get(handles.axes3, 'Children');
+	%set(h, 'CData', n);
+    
+    h = get(handles.axes4, 'Children');
+	set(h, 'CData', toMatrix(3, s));
+    
+>>>>>>> .r52
 end
 
 stop(handles.vid);
