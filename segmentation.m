@@ -1,13 +1,11 @@
-function res = segmentation(a)
-b = joinchannels('rgb', dip_image(a));
-c = b{1};
-d = b{2};
-e = b{3};
-redThreshold = 130:70:200;
-greenThreshold = 20:70:90;
-blueThreshold = 40:40:80;
-r = threshold(c,'double',redThreshold);
-g = threshold(d,'double',greenThreshold);
-h = threshold(e,'double',blueThreshold);
-rghCombo = r*g*h;
-res = rghCombo;
+% segmentation(img_data)
+% img_data = MxNx3 matrix containing pixel data
+% Returns: segmented dipimage
+function segmented = segmentation(img_data)
+    img_joined = joinchannels('rgb', dip_image(img_data));
+    
+    % Get labeled image with lifts detected:
+    img_lifts = liftDetect(img_joined);
+    
+    % Making segments (aka: lifts) visible using thresholding:
+    segmented = threshold(img_lifts, 'fixed', 1);
