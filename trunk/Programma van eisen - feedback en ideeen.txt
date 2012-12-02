@@ -1,1 +1,18 @@
 Ben er nog mee bezig, maar je kan alvast meekijken en denken. ~Daniël
+
+Raoul's Feedback:
+1. Ten eerste ik raad je aan om de eizen te nummeren.
+2. Eis 2 - "moet operationeel zijn voor minimaal de duur van de opname" zou ik vervangen met "gedurende de tijd dat het systeem aan staat". Want zoals het nu staat betekent het dat het lift bijv. 5 min operationeel is, daarna niet en tijdens die tijd dat ie niet operationeel is zetten we het systeem aan voor 5 min :P
+3. "minimaal 0 en maximaal 10" - misschien een iets kleinere maximum is veiliger :P
+4. "de lichtintensiteit van de omgeving..." - is het duidelijk dat het om de omgeving waarop de camera staat gaat?
+5. "Er mag geen licht met een lichtintensiteit hoger dan 10.000 lux direct geschenen worden in de lens van de webcam voor meer dan 5 seconden" - wat als ik dan dat 5 sec doe, 1 milisec pauze en daarna weer? xD Ik stel voor: "lichtbronnen die lichtintensiteit >= 10.000 lux zijn niet langer dan 2 seconden in beeld en komen voor in een minimale interval van 30 seconden."
+6. De figuren die tim gemaakt heeft moeten toegevoegd worden.
+7. "De camera moet op minimaal 3 en maximaal 6 meter afstand bevinden buiten de lift" - voeg toe: "3 en max. 6 meter afstand van de lift, buiten de lift.
+8. "In de kijkrichting van de camera mag niet meer dan 30% van het zicht belemmerd worden door een object dat 0 tot 30 cm van het zicht van de camera verwijderd is en aanwezig is op de belemmerende positie voor meer dan 5 seconden" - lolwut? Ik snap niet eens wat dit precies zegt... :P
+9. "De lens van de camera mag niet meer dan 15% -->[in oppervlakte]<-- bedekt zijn voor meer dan 2 seconden"
+10. De lucht moet vrij zijn van rook die het zicht van de camera meer dan 25% belemmert  - wat is een zicht-belemmering in %? wat bedoel je hiermee?
+11. "Het systeem moet real-time statistieken tonen van het aantal mensen dat in en uit de lift zijn gelopen, daarbij hoort het aantal in- en uitgaande personen die gebruik maken van de lift op het moment van opname" - ik zou de laatste stukje aanpassen. ipv "moment van opname" misschien "gedurende de werkingsperiode van het systeem"?
+12. "Het systeem moet de bewegingen van de liftdeuren van de lift waaraan de meting gedaan wordt kunnen detecteren" - moet dat? lijkt me overbodig.
+13. "Er moet gebruikt worden gemaakt van Matlab R2011b of R2012b" - verander: "het systeem moet draaien op..." ?
+14. "Het aantal herkende personen mag maximaal 20% afwijken van het werkelijke aantal personen dat in beeld is" - vervang met: "Het aantal mensen die volgens het system de lift hebben gebruikt gedurende een tijd van minimaal 10 minuten moet noemen we P. Het aantal personen die werkelijk de lift gebruikt hebben in die tijd noemen we PW. Er geldt: 0.8PW <= P <= 1.2PW"
+15.  
