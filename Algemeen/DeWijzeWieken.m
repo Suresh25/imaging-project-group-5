@@ -200,3 +200,60 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [FileName,PathName,FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
+loadedVideo = videoLoader(FileName);
+
+% hObject    handle to startAnalyse (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global liftBackground;
+liftBackground = 'a';
+global waar;
+waar = true;
+
+data = getdata(loadedVideo, 1);
+
+axes(handles.axes1);
+image(data);
+
+axes(handles.axes2);
+image(data);
+
+axes(handles.axes3);
+image(data);
+
+axes(handles.axes4);
+image(data);
+
+while waar == true
+    data = getdata(loadedVideo, 2);
+    
+    
+    %disp(liftBackground);
+    
+    n = normalise(data(:,:,:,2));
+    s = segmentation(n,liftBackground);
+    %l = labeling(s);
+    p = property(n);
+    c = classification(p);
+    t = count(c);
+    
+	h = get(handles.axes1, 'Children');
+	set(h, 'CData', data(:,:,:,2));
+    
+    h = get(handles.axes2, 'Children');
+	set(h, 'CData', data(:,:,:,2));
+    %set(h, 'CData', s);
+    
+    h = get(handles.axes3, 'Children');
+    set(h, 'CData', toMatrix(3,s,s,s));
+    
+    %*h = get(handles.axes4, 'Children');
+    temp = zeros(size(n, 1), size(n, 2), 3);
+    temp(:,:,1) = s;
+    temp(:,:,2) = s;
+    temp(:,:,3) = s;
+	%set(h, 'CData', temp.*n);*/
+    
+    h = get(handles.axes4, 'Children');
+    set(h, 'CData', n.*temp);
+end
