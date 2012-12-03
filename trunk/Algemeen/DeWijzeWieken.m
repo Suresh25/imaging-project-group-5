@@ -22,7 +22,7 @@ function varargout = DeWijzeWieken(varargin)
 
 % Edit the above text to modify the response to help DeWijzeWieken
 
-% Last Modified by GUIDE v2.5 26-Nov-2012 10:07:37
+% Last Modified by GUIDE v2.5 03-Dec-2012 10:20:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -192,3 +192,17 @@ liftBackground = normalise(getdata(handles.vid, 1));
 %h = get(handles.axes2, 'Children');
 %set(h, 'CData', liftBackground);
 %disp(liftBackground);
+
+
+% --- Executes on button press in loadVideoButton.
+function loadVideoButton_Callback(hObject, eventdata, handles)
+% hObject    handle to loadVideoButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function loadVideoButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to loadVideoButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
