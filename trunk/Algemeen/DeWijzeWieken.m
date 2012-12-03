@@ -225,7 +225,7 @@ axes(handles.axes4);
 image(data);
 
 while waar == true
-    data = read(loadedVideo, 1);
+    data = read(loadedVideo, 2);
     
     
     %disp(liftBackground);
