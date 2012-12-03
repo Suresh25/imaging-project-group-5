@@ -210,7 +210,7 @@ liftBackground = 'a';
 global waar;
 waar = true;
 
-data = getdata(loadedVideo, 1);
+data = read(loadedVideo, 1);
 
 axes(handles.axes1);
 image(data);
@@ -225,7 +225,7 @@ axes(handles.axes4);
 image(data);
 
 while waar == true
-    data = getdata(loadedVideo, 2);
+    data = read(loadedVideo, 2)
     
     
     %disp(liftBackground);
