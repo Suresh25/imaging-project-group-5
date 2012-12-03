@@ -144,7 +144,7 @@ while waar == true
     
     h = get(handles.axes4, 'Children');
     set(h, 'CData', n.*temp);
-end
+end 
 
 stop(handles.vid);
 
@@ -224,6 +224,7 @@ image(data);
 axes(handles.axes4);
 image(data);
 
+%{ 
 while waar == true
     data = read(loadedVideo, 2);
     
@@ -255,5 +256,7 @@ while waar == true
 	%set(h, 'CData', temp.*n);*/
     
     h = get(handles.axes4, 'Children');
-    set(h, 'CData', n.*temp);
+    set(h, 'CData', n.*temp); 
+
 end
+%}
