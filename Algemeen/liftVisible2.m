@@ -1,4 +1,4 @@
-function visible = liftVisible2(labeled_img)
+function visible = liftVisible2(img)
     % Some constants:
     % minArea = The area of the lift when closed.
     % segmentThreshold = Only objects with their size >= this will be
@@ -8,7 +8,7 @@ function visible = liftVisible2(labeled_img)
     segmentThreshold = 7000; 
     
     % Begin measurements:
-    msr = measure(labeled_img, [], {'Size'}, [], 1, 0, 0);
+    msr = measure(img, [], {'Size'}, [], 1, 0, 0);
     
     % Filter out small object-segments:
     filtered_msr = zeros(1, size(msr, 1));
