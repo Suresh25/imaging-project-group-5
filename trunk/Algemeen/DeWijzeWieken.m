@@ -225,12 +225,12 @@ axes(handles.axes4);
 image(data);
 
 while waar == true
-    data = read(loadedVideo, 2)
+    data = read(loadedVideo, 1);
     
     
     %disp(liftBackground);
     
-    n = normalise(data(:,:,:,2));
+    n = normalise(data(:,:,:,1));
     s = segmentation(n,liftBackground);
     %l = labeling(s);
     p = property(n);
@@ -238,10 +238,10 @@ while waar == true
     t = count(c);
     
 	h = get(handles.axes1, 'Children');
-	set(h, 'CData', data(:,:,:,2));
+	set(h, 'CData', data(:,:,:,1));
     
     h = get(handles.axes2, 'Children');
-	set(h, 'CData', data(:,:,:,2));
+	set(h, 'CData', data(:,:,:,1));
     %set(h, 'CData', s);
     
     h = get(handles.axes3, 'Children');
