@@ -92,8 +92,9 @@ function startAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to startAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global liftBackground;
+global liftBackground liftBackgroundN;
 liftBackground = 'a';
+liftBackgroundN = 'a';
 global waar;
 waar = true;
 
@@ -118,7 +119,7 @@ while waar == true
     
     %disp(liftBackground);
     
-    n = normalise(data(:,:,:,2), liftBackground);
+    n = normalise(data(:,:,:,2), liftBackground, liftBackgroundN);
     s = segmentation(n,liftBackground);
     %l = labeling(s);
     p = property(n);
@@ -187,8 +188,9 @@ function backgroundCatch_Callback(hObject, eventdata, handles)
 % hObject    handle to backgroundCatch (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global liftBackground;
-liftBackground = normalise(getdata(handles.vid, 1), 'a');
+global liftBackground liftBackgroundN;
+liftBackground = normalise(getdata(handles.vid, 1), 'a', 'a');
+liftBackgroundN = getdata(handles.vid, 1);
 %h = get(handles.axes2, 'Children');
 %set(h, 'CData', liftBackground);
 %disp(liftBackground);
