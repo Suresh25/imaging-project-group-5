@@ -1,11 +1,21 @@
-% segmentation(img_data)
-% img_data = MxNx3 matrix containing pixel data
-% Returns: segmented dipimage
-function segmented = segmentation(img_data)
-    img_joined = joinchannels('rgb', dip_image(img_data));
-    
-    % Get labeled image with lifts detected:
-    img_lifts = liftDetect(img_joined);
-    
-    % Making segments (aka: lifts) visible using thresholding:
-    segmented = threshold(img_lifts, 'fixed', 1);
+function res = segmentation(a,liftBackground)
+%a = uint8(a.*255);
+
+dif1 = abs(liftBackground-a);
+dif2 = abs(a-liftBackground);
+%b = joinchannels('rgb',dif);
+
+tres = 10/255;
+
+temp = (dif1(:,:,1) > tres) | (dif1(:,:,2) > tres) | (dif1(:,:,3) > tres) | (dif2(:,:,1) > tres) | (dif2(:,:,2) > tres) | (dif2(:,:,3) > tres);
+res = dip_image(temp);
+
+%res = dip_image(dif > 0);
+%res = difr | difg | difb;
+%  || (difg > 5) || (difb > 5)
+
+
+%hsvImage = rgb2hsv(dif);  %# Convert the image to HSV space
+%hsvImage(:,:,2) = 1;           %# Maximize the saturation
+%res = hsv2rgb(hsvImage);  %# Convert the image back to RGB space
+

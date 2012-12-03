@@ -39,6 +39,11 @@ c = dip_image(j(:,:,3));
 totp = size(j, 1) * size(j, 2);
 gemp = sum(sum(sum(j))) / totp / 3;
 tot = 125 / gemp;
+if tot > 1
+    tot = 1;
+end
+
+tot = 1;
 %totm = sum(j,3)./375;
 
 a = dip_image((a.*tot));
