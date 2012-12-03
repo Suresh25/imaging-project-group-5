@@ -51,7 +51,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
-vid = videoinput('winvideo', 1, 'RGB24_320x240');
+vid = videoinput('winvideo');
 set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
 set(vid, 'ReturnedColorSpace','RGB');
