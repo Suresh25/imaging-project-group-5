@@ -8,7 +8,7 @@ function labeled_img = liftDetect(img)
     b = img{3};
     
     % Color-range of lift in normalised images:
-    r_thres = [70, 200];
+    r_thres = [70, 240];
     g_thres = [40, 100];
     b_thres = [40, 100];
 
@@ -20,7 +20,8 @@ function labeled_img = liftDetect(img)
     filtered_img = rt & gt & bt;
 
     % Closing and re-label:
-    filtered_img = dilation(filtered_img, 12, 'elliptic');
-    filtered_img = erosion(filtered_img, 12, 'elliptic');
+    filtered_img = dilation(filtered_img, 4, 'elliptic');
+    filtered_img = erosion(filtered_img, 4, 'elliptic');
 
-    labeled_img = label(filtered_img, Inf, 200, 0);
+    labeled_img = filtered_img;
+    % labeled_img = label(filtered_img, Inf, 200, 0);
