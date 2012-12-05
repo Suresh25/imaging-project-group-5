@@ -53,8 +53,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
 imaqreset;
 
-%vid = videoinput('winvideo', 1, 'RGB24_320x240');
-vid = videoinput('winvideo');
+vid = videoinput('winvideo', 1, 'RGB24_320x240');
+%vid = videoinput('winvideo');
 set(vid, 'TriggerRepeat', inf);
 set(vid, 'FrameGrabInterval', 1);
 %set(vid, 'ReturnedColorSpace', 'grayscale')
@@ -92,8 +92,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
 % hObject    handle to startAnalyse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global liftBackground;
-liftBackground = 'a';
+
 global waar;
 waar = true;
 
@@ -112,6 +111,9 @@ image(data);
 axes(handles.axes4);
 image(data);
 
+global liftBackground;
+liftBackground = normalise(getdata(handles.vid, 1));
+
 while waar == true
     data = getdata(handles.vid, 2);
     
@@ -121,29 +123,45 @@ while waar == true
     n = normalise(data(:,:,:,2));
     s = segmentation(n,liftBackground);
     %l = labeling(s);
-    p = property(n);
-    c = classification(p);
-    t = count(c);
+    %p = property(n);
+    %c = classification(p);
+    %t = count(c);
     
 	h = get(handles.axes1, 'Children');
 	set(h, 'CData', data(:,:,:,2));
     
     h = get(handles.axes2, 'Children');
-	set(h, 'CData', data(:,:,:,2));
+    set(h, 'CData', n);
+	
+    %set(h, 'CData', data(:,:,:,2));
     %set(h, 'CData', s);
     
     h = get(handles.axes3, 'Children');
     set(h, 'CData', toMatrix(3,s,s,s));
     
     %*h = get(handles.axes4, 'Children');
-    temp = zeros(size(n, 1), size(n, 2), 3);
-    temp(:,:,1) = s;
-    temp(:,:,2) = s;
-    temp(:,:,3) = s;
+    %temp = zeros(size(n, 1), size(n, 2), 3);
+    %temp(:,:,1) = s;
+    %temp(:,:,2) = s;
+    %temp(:,:,3) = s;
 	%set(h, 'CData', temp.*n);*/
     
     h = get(handles.axes4, 'Children');
-    set(h, 'CData', n.*temp);
+    set(h, 'CData', data(:,:,:,2));
+    
+    msr = measure(s,[],{'Size','Minimum','CartesianBox'},[],Inf,2000,0);
+    c = size(msr);
+    if c(1) > 0
+        set(handles.text2, 'String', ['Oppervlakte : ', num2str(msr.size)]);
+        set(handles.text3, 'String', ['Verhoudingen : ', num2str(msr.CartesianBox(1)), ':', num2str(msr.CartesianBox(2))]);
+    else
+        set(handles.text2, 'String', 'Oppervlakte  : -');
+        set(handles.text3, 'String', 'Verhoudingen : -');
+    end
+    
+    set(handles.text1, 'String', ['Aantal objecten: ', num2str(c(1))]);
+    
+    drawnow
 end
 
 stop(handles.vid);
