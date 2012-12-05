@@ -13,9 +13,10 @@ tres = 5/255;
 
 %threshold op elk kanaal op alle 2 de beelden
 temp = (dif1(:,:,1) > tres) | (dif1(:,:,2) > tres) | (dif1(:,:,3) > tres) | (dif2(:,:,1) > tres) | (dif2(:,:,2) > tres) | (dif2(:,:,3) > tres);
-%tim faalt
+
+
 temp = berosion (temp,5,1,1);
-temp = bdilation(temp,5,1,1);
+%temp = bdilation(temp,5,1,1);
 %temp = berosion(temp,5,1,1);
 res = dip_image(temp);
 
