@@ -7,5 +7,5 @@
 function segments = segment(img, gui_handle)
     % PLACEHOLDER:
     segments = newimar(2);
-    segments{1} = segmentLift(img, gui_handle);
+    segments{1} = gui_handle.lift_segmented;
     segments{2} = segmentPerson(img, gui_handle);
