@@ -8,12 +8,13 @@ function visible = liftVisible(labeled_img)
     
     % Begin measurements:
     msr = measure(labeled_img, [], {'Size', 'Minimum', 'Maximum',... 
-                                    'Perimeter'}, [], Inf, 0, 0);
+                                    'Perimeter'}, [], 1, 0, 0);
     numDetected = size(msr, 1);
     
     % Check for extreme fractions:
     if fractionLimit > numDetected
         visible = false;
+        'fractionLimit breached.'
         return;
     end
     
