@@ -5,14 +5,18 @@
 
 function segmented = segmentPerson(img, gui_handle)
     liftBackground = gui_handle.calib_img;
-    diff = img - liftBackground;
+    diff1 = img - liftBackground;
+    diff2 = liftBackground - img;
     diff_thres = 5;
     
-    r = diff{1} > diff_thres;
-    g = diff{2} > diff_thres;
-    b = diff{3} > diff_thres;
+    r = diff1{1} > diff_thres;
+    g = diff1{2} > diff_thres;
+    b = diff1{3} > diff_thres;
+    r2 = diff2{1} > diff_thres;
+    g2 = diff2{2} > diff_thres;
+    b2 = diff2{3} > diff_thres;
     
-    temp = r + g + b;
+    temp = r | g | b | r2 | g2 | b2;
     %temp = erosion (temp, 5, 'elliptic');
     %temp = dilation(temp, 5, 'elliptic');
     
