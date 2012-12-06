@@ -24,4 +24,4 @@ function segmented = segmentLift(img, gui_handle)
     filtered_img = dilation(filtered_img, 4, 'elliptic');
     filtered_img = erosion(filtered_img, 4, 'elliptic');
 
-    segmented = filtered_img;
+    segmented = ~filtered_img;
