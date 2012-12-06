@@ -58,7 +58,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % Init our video-input and its properties:
     vid = videoinput('winvideo');
     set(vid, 'TriggerRepeat', inf);
-    set(vid, 'FrameGrabInterval', 8);
+    set(vid, 'FrameGrabInterval', 2);
     set(vid, 'ReturnedColorSpace','RGB');
     % vid = videoinput('winvideo', 1, 'RGB24_320x240');
     % set(vid, 'ReturnedColorSpace', 'grayscale');

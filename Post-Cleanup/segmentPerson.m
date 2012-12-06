@@ -7,7 +7,7 @@ function segmented = segmentPerson(img, gui_handle)
     liftBackground = gui_handle.calib_img;
     diff1 = img - liftBackground;
     diff2 = liftBackground - img;
-    diff_thres = 5;
+    diff_thres = 25;
     
     r = diff1{1} > diff_thres;
     g = diff1{2} > diff_thres;
