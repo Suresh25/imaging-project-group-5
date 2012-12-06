@@ -1,27 +1,7 @@
 function res = normalise(in, back, backN)
-%global waar;
 
-%i = rgb2hsv(i);
-
-%j = rgb2hsv(in);
 j = in;
 %in = dip_image(j);
-
-%dm = zeros(size(j, 1), size(j, 2), 3);
-%dm(:,:,1) = d;
-%dm(:,:,2) = d;
-%dm(:,:,3) = d;
-
-%d = times(double(in*255), double(dm));
-%d = dip_image(double(in(:,:,1)))*255;
-%high = double(i + 0.1 < 255);
-%out = ((100 < in(:,:,1) < 200) .* (100 < in(:,:,2) < 200));
-%out = double(d);
-
-%waar = false;
-
-%b = b > 255;
-%c = c > 125;
 
 %=== last normalize, with 2 background images===
 % if back ~= 'a'
@@ -36,9 +16,10 @@ j = in;
 %     totp = sum(sum(sum(nor)));
 %     gemj = sum(sum(sum(j))) / totp;
 %     geml = sum(sum(sum(l))) / totp;
-%     gemp = (gemj.*255) - geml;
+%     gemp = (gemj.*255)/geml;
 %     
-%     j = double((in + gemp)./255);
+%     %j = double((in + gemp)./255);
+%     j = double((in.*gemp)./255);
 % else
 %     j = j ./ 255;
 %     totp = size(j, 1) * size(j, 2) * 3;
@@ -48,13 +29,9 @@ j = in;
 %     tot = (125/255) / gemp;
 %     j = double((in.*tot)./255);
 % end
-
-%j = double((in.*tot)./255);
-j(j > 1) = 1;
-j(j < 0) = 0;
-
-%== older
-%totm = sum(j,3)./375;
+%
+%j(j > 1) = 1;
+%j(j < 0) = 0;
 
 %=== Normalisation based on avarage of all pixel values, bringen them back
 %to the chosen middle value of 125.
@@ -87,5 +64,5 @@ j(j < 0) = 0;
 
 
 %=== Returning the normalized view
-%res = double(in./255);
-res = j;
+res = double(dip_image(in)./255);
+%res = j;

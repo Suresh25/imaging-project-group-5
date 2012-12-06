@@ -65,6 +65,7 @@ src = getselectedsource(vid);
 set(src, 'Brightness', 0);
 set(src, 'Contrast', 0);
 set(src, 'BacklightCompensation', 'off');
+set(src, 'Sharpness', 1);
 
 global waar;
 waar = false;
