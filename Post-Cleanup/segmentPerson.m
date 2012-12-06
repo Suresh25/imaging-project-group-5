@@ -17,7 +17,7 @@ function segmented = segmentPerson(img, gui_handle)
     b2 = diff2{3} > diff_thres;
     
     temp = r | g | b | r2 | g2 | b2;
-    %temp = erosion (temp, 5, 'elliptic');
-    %temp = dilation(temp, 5, 'elliptic');
+    temp = erosion (temp, 7, 'elliptic');
+    temp = dilation(temp, 7, 'elliptic');
     
     segmented = temp;
