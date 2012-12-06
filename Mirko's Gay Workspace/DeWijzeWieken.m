@@ -61,6 +61,11 @@ set(vid, 'FrameGrabInterval', 1);
 set(vid, 'ReturnedColorSpace','RGB');
 handles.vid = vid;
 
+src = getselectedsource(vid);
+set(src, 'Brightness', 0);
+set(src, 'Contrast', 0);
+set(src, 'BacklightCompensation', 'off');
+
 global waar;
 waar = false;
 
