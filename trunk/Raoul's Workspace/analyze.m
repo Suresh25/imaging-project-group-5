@@ -11,3 +11,4 @@ function analyze(imgs, gui_handle)
     labeled_img = labeling(imgs);
     info = classify(labeled_img, gui_handle);
     compute(info, gui_handle);
+    gui_handle.history = [gui_handle.history; info];

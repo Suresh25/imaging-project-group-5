@@ -22,7 +22,7 @@ function varargout = DeWijzeWieken(varargin)
 
     % Edit the above text to modify the response to help DeWijzeWieken
 
-    % Last Modified by GUIDE v2.5 03-Dec-2012 10:32:31
+    % Last Modified by GUIDE v2.5 06-Dec-2012 11:22:26
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -58,7 +58,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % Init our video-input and its properties:
     vid = videoinput('winvideo');
     set(vid, 'TriggerRepeat', inf);
-    set(vid, 'FrameGrabInterval', 3);
+    set(vid, 'FrameGrabInterval', 2);
     set(vid, 'ReturnedColorSpace','RGB');
     % vid = videoinput('winvideo', 1, 'RGB24_320x240');
     % set(vid, 'ReturnedColorSpace', 'grayscale');
@@ -70,6 +70,11 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
+    handles.lift_segmented = 0;
+    handles.history = [];
+    handles.traffic_total = 0;
+    handles.traffic_out = 0;
+    handles.traffic_in = 0;
     handles.output = hObject;
 
     % Update handles structure
@@ -92,7 +97,8 @@ function varargout = DeWijzeWieken_OutputFcn(hObject, eventdata, handles)
     % Get default command line output from handles structure
     varargout{1} = handles.output;
 
-
+% Initializes all the viewports on the GUI by placing an initial image
+% in them.
 function initViewports(handles, frame)
     ports = [ handles.axes1, ... 
               handles.axes2, ... 
@@ -103,6 +109,8 @@ function initViewports(handles, frame)
         image(frame);
     end
 
+% Retrieves a single frame from source (camera or file) as specified by 
+% the handles.input_source variable.
 function frame = getFrame(hObject, handles)
     if strcmp(handles.input_source, 'camera')
         frame = getdata(handles.vid, 1);
@@ -116,20 +124,25 @@ function frame = getFrame(hObject, handles)
          % Maintain frame-rate
          pause(1 / handles.loaded_video.FrameRate);
     end    
-        
+
+% Displays a given frame on given viewport.
 function displayFrame(axes, frame)
     h = get(axes, 'Children');
     set(h, 'CData', frame);
-    
+
+% Displays a frame on the main (and largest) viewport.
 function displayMain(handles, frame)
     displayFrame(handles.axes1, frame);
 
+% Displays a frame on the 'original image' viewport.
 function displayOriginal(handles, frame)
     displayFrame(handles.axes2, frame);
 
+% Displays a frame on the 'post-filtering' viewport.
 function displayFiltered(handles, frame)
     displayFrame(handles.axes3, frame);
 
+% Displays a frame on the 'post-processing' viewport.
 function displayProcessed(handles, frame)
     displayFrame(handles.axes4, frame);
 
@@ -145,15 +158,20 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     
     % Start video retrieval and initialise viewports
     start(handles.vid);
-    % captureCalib(hObject, handles);
+    captureCalib(hObject, handles);
     frame = getFrame(hObject, handles);
     initViewports(handles, frame);
    
     while handles.analyze
+        tic;
         frame = getFrame(hObject, handles);
         
         enhanced = enhance(frame, handles);
-        % analyze(enhanced, handles);
+        statTest(enhanced{2}, handles);
+        %analyze(enhanced, handles);
+        
+        % Save changes to handles:
+        guidata(hObject, handles);
         
         displayMain(handles, frame);
         displayOriginal(handles, frame);
@@ -162,6 +180,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         % Update handles
         handles = guidata(hObject);
+        toc;
     end 
 
     stop(handles.vid);
@@ -197,6 +216,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 
 function captureCalib(hObject, handles)
     handles.calib_img = normalise(getdata(handles.vid, 1));
+    handles.lift_segmented = segmentLift(handles.calib_img);
     guidata(hObject, handles);
 
 % --- Executes on button press in backgroundCatch.
