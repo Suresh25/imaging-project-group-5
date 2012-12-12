@@ -4,4 +4,4 @@
 
 function labeled = labelLift(img)
     % PLACEHOLDER:
-    labeled = label(img, 2, 200, Inf);
+    labeled = label(img, 2, 200, 0);

@@ -1,5 +1,5 @@
 % classify(img, gui_handle)
-% img = Labeled DIPImage with persons labeled
+% img = Labeled DIPImage array with persons labeled
 % gui_handle = the handles of the GUI.
 % Returns: Int array of length 2. First element is the # of persons in
 %          the lift. Second element is the # of persons out the lift
@@ -11,10 +11,10 @@ function info = classify(img, gui_handle)
     msr = measure(img, [], {'Center'}, [], 1, 0, 0);
     
     % Retrieve the elevator boundry-box from the main-app:
-    east = 270; % gui_handle.lift_bounds(1)
-    west = 50;
-    north = 20;
-    south = 200;
+    east = gui_handle.lift_bounds(2, 1);
+    west = gui_handle.lift_bounds(1, 1);
+    north = gui_handle.lift_bounds(1, 2);
+    south = gui_handle.lift_bounds(2, 2);
     
     % Check per person if its center lies inside the boundries of the elevator: 
     for i = 1 : size(msr, 1)
