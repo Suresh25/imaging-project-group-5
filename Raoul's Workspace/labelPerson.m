@@ -3,4 +3,5 @@
 % Returns: a labeled DIPImage with lift labeled.
 
 function labeled = labelPerson(img)
-    labeled = label(img, 2, 200, Inf);
+    % PLACEHOLDER:
+    labeled = label(img, 2, 200, 0);

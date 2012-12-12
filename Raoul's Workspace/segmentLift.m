@@ -9,9 +9,9 @@ function segmented = segmentLift(img, gui_handle)
     b = img{3};
     
     % Color-range of lift in normalised images:
-    r_thres = [70, 240];
-    g_thres = [40, 100];
-    b_thres = [40, 100];
+    r_thres = [90, 170];
+    g_thres = [20, 40];
+    b_thres = [0, 20];
 
     % Generate rgb channels post threshold filter:
     rt = threshold(r, 'double', r_thres);
@@ -24,4 +24,4 @@ function segmented = segmentLift(img, gui_handle)
     filtered_img = dilation(filtered_img, 4, 'elliptic');
     filtered_img = erosion(filtered_img, 4, 'elliptic');
 
-    segmented = ~filtered_img;
+    segmented = filtered_img;
