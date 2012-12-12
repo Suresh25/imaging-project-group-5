@@ -1,0 +1,13 @@
+function res = segmentation(a)
+b = joinchannels('rgb', dip_image(a));
+c = b{1};
+d = b{2};
+e = b{3};
+redThreshold = 130:70:200;
+greenThreshold = 20:70:90;
+blueThreshold = 40:40:80;
+r = threshold(c,'double',redThreshold);
+g = threshold(d,'double',greenThreshold);
+h = threshold(e,'double',blueThreshold);
+rghCombo = toMatrix(3, r*g*h);
+res = rghCombo;
