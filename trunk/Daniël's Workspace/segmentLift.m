@@ -1,8 +1,9 @@
-% liftDetect(img)
-% img = Joined rgb dipimage.
-% Returns: DIPImage (with lifts segmented)
+% segmentLift(img)
+% img = Normalised DIPImage.
+% gui_handle = the handles of a GUI.
+% Returns: Segmented image (with lift segments)
 
-function seg_img = liftDetect(img)
+function segmented = segmentLift(img, gui_handle)
     r = img{1};
     g = img{2};
     b = img{3};
@@ -23,5 +24,4 @@ function seg_img = liftDetect(img)
     filtered_img = dilation(filtered_img, 4, 'elliptic');
     filtered_img = erosion(filtered_img, 4, 'elliptic');
 
-    seg_img = filtered_img;
-    % labeled_img = label(filtered_img, Inf, 200, 0);
+    segmented = ~filtered_img;

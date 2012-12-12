@@ -1,4 +1,3 @@
-vid = videoinput('winvideo', 1, 'RGB24_320x240');
 start(vid)
 data_color = getdata(vid, 1);
 stop(vid)
@@ -14,4 +13,3 @@ g = threshold(c,'double',greenThreshold)
 h = threshold(d,'double',blueThreshold)
 rghCombo = r&g&h
 rghCombo_labeled = label(rghCombo,Inf,200,0)
-clear vid;
