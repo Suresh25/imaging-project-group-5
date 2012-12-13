@@ -9,5 +9,5 @@
 
 function analyze(imgs, gui_handle)
     labeled_img = labeling(imgs);
-    info = classify(labeled_img, gui_handle);
+    info = classify(labeled_img, gui_handle, handles.classificationPreviousObjectList);
     compute(info, gui_handle);
