@@ -2,7 +2,7 @@
 % info = Integer array of length 2. The first element is the # of persons
 %        in the lift. The second element is the # of persons out the lift.
 % gui_handle = the handles of a GUI.
-% Returns: Nothing.
+% Returns: An updated GUI handle.
 % Effects: Uses gui_handle to change properties of the GUI, so that
 %          relevant statistics will be displayed on it.
 
@@ -26,9 +26,19 @@ function handle = compute(info, gui_handle)
     gui_handle.traffic_out = gui_handle.traffic_out + deltaOut;
     gui_handle.traffic_total = gui_handle.traffic_total + ... 
                                deltaIn + deltaOut;
+    gui_handle.debug = num2str(size(gui_handle.history, 1));
     
     if deltaIn || deltaOut
         gui_handle.history = [0, 0];
+    end
+    
+    gui_handle.history = [gui_handle.history; info];
+    
+    % Keep history in a fixed size:
+    cache_size = 30;  % Has to be >= 2
+    history_size = size(gui_handle.history, 1);
+    if history_size > cache_size
+        gui_handle.history = gui_handle.history(2: history_size, :);
     end
     
     handle = gui_handle;
