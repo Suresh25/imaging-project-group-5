@@ -81,6 +81,10 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.lift_bounds = [0, 0; 100, 100];
     last_frame = 0;
     
+    %Init empty array that will contain list of previous objects in image
+    %for classification
+    handles.classificationPreviousObjectList = [];
+    
     % Update handles structure
     guidata(hObject, handles);
 
