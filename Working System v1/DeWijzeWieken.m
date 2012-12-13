@@ -58,6 +58,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % Init DIPLib
     dipstart;
     
+    global last_frame;
+    
     % Init our custom global properties
     %handles.vid = videoinput('winvideo');
     %set(handles.vid, 'TriggerRepeat', inf);
@@ -75,6 +77,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.traffic_in = 0;
     handles.traffic_inview = 0;
     handles.output = hObject;
+    handles.debug = '';
+    last_frame = 0;
     
     % Update handles structure
     guidata(hObject, handles);
@@ -150,8 +154,9 @@ function displayStats(handles)
         ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
          'Outgoing: ', num2str(handles.traffic_out), char(10), ...
          'Total: ', num2str(handles.traffic_total), char(10), ...
-         'In view: ', num2str(handles.traffic_inview)]);
-     drawnow
+         'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Debug: ', handles.debug]);
+    drawnow
  
 % --- Executes on button press in startAnalyse.
 function startAnalyse_Callback(hObject, eventdata, handles)
@@ -159,6 +164,8 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
    
+    global last_frame last_frame_temp;
+    
     % Flag analysis start
     handles.analyze = true;
     
@@ -189,6 +196,9 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         % Update handles
         handles = guidata(hObject);
+        
+        %save frame for next itteration
+        last_frame = last_frame_temp;
         toc;
     end
     
