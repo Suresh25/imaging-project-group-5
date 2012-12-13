@@ -72,6 +72,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.calib_img = 0;
     handles.lift_segmented = 0;
     handles.output = hObject;
+    global last_frame;
+    last_frame = 0;
 
     % Update handles structure
     guidata(hObject, handles);
@@ -141,6 +143,8 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
    
+    global last_frame last_frame_temp;
+    
     % Flag analysis start
     handles.analyze = true;
     guidata(hObject, handles);
@@ -158,10 +162,8 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         tic;
         frame = getFrame(hObject, handles);
         flushdata(handles.vid);
-        
-        toc;
-        tic;
-        enhanced = enhance(frame, handles);
+
+        enhanced = enhance(frame, hObject, handles);
         statTest(enhanced{2}, handles);
         %analyze(enhanced, handles);
 
@@ -171,6 +173,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
         
         % Update handles
+        last_frame = last_frame_temp;
         handles = guidata(hObject);
 
         toc;
