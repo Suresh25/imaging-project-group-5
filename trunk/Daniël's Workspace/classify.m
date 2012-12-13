@@ -20,6 +20,7 @@ function info = classify(img, gui_handle, objectList)
     
     for i = 1 : size(msr, 1)
         for j = 1 : size(objectList, 1)
+%     PSEUDO-CODE V1:
 %         if( personObject within lift boundary)
 %             if(area gets smaller && objectarea nears 0)        
 %               personObjectsTotal decrease (automated already through labeling)
