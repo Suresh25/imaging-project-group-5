@@ -8,11 +8,11 @@ function norm = normalise(img, gui_handle)
     %i = rgb2hsv(i);
 
     %j = rgb2hsv(in);
-    j = img;
-
-    a = dip_image(j(:,:,1));
-    b = dip_image(j(:,:,2));
-    c = dip_image(j(:,:,3));
+     j = img;
+ 
+     a = dip_image(j(:,:,1));
+     b = dip_image(j(:,:,2));
+     c = dip_image(j(:,:,3));
 
     %d = zeros(size(a,1), size(a,2), 3);
     %d(:,:,0) = double(a);
@@ -40,23 +40,24 @@ function norm = normalise(img, gui_handle)
     %b = b > 255;
     %c = c > 125;
 
-    totp = size(j, 1) * size(j, 2);
-    gemp = sum(sum(sum(j))) / totp / 3;
-    tot = 125 / gemp;
-    if tot > 1
-        tot = 1;
-    end
-
-    tot = 1;
-    %totm = sum(j,3)./375;
-
-    a = dip_image((a.*tot));
-    b = dip_image((b.*tot));
-    c = dip_image((c.*tot));
-
-    dm = zeros(size(j, 1), size(j, 2), 3);
-    dm(:,:,1) = a/255;
-    dm(:,:,2) = b/255;
-    dm(:,:,3) = c/255;
-
-    norm = joinchannels('rgb', a, b, c);
+%     totp = size(j, 1) * size(j, 2);
+%     gemp = sum(sum(sum(j))) / totp / 3;
+%     tot = 125 / gemp;
+%     if tot > 1
+%         tot = 1;
+%     end
+% 
+%     tot = 1;
+%     %totm = sum(j,3)./375;
+% 
+%     a = dip_image((a.*tot));
+%     b = dip_image((b.*tot));
+%     c = dip_image((c.*tot));
+% 
+%     dm = zeros(size(j, 1), size(j, 2), 3);
+%     dm(:,:,1) = a/255;
+%     dm(:,:,2) = b/255;
+%     dm(:,:,3) = c/255;
+% 
+     norm = joinchannels('rgb', a, b, c);
+    %norm = dip_image(img);

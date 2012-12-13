@@ -22,7 +22,7 @@ function varargout = DeWijzeWieken(varargin)
 
     % Edit the above text to modify the response to help DeWijzeWieken
 
-    % Last Modified by GUIDE v2.5 06-Dec-2012 11:22:26
+    % Last Modified by GUIDE v2.5 09-Dec-2012 20:56:16
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -58,7 +58,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % Init our video-input and its properties:
     vid = videoinput('winvideo');
     set(vid, 'TriggerRepeat', inf);
-    set(vid, 'FrameGrabInterval', 2);
+    %set(vid, 'FrameGrabInterval', 5);
     set(vid, 'ReturnedColorSpace','RGB');
     % vid = videoinput('winvideo', 1, 'RGB24_320x240');
     % set(vid, 'ReturnedColorSpace', 'grayscale');
@@ -107,12 +107,13 @@ function initViewports(handles, frame)
 function frame = getFrame(hObject, handles)
     if strcmp(handles.input_source, 'camera')
         frame = getdata(handles.vid, 1);
-    end
-    if strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
+    elseif strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
          frame = read(handles.loaded_video, handles.lv_frame_index);
          if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
             handles.lv_frame_index = handles.lv_frame_index + 1;
             guidata(hObject, handles);
+            
+            set(handles.slider1, 'Value', handles.lv_frame_index);
          end
          % Maintain frame-rate
          pause(1 / handles.loaded_video.FrameRate);
@@ -149,15 +150,21 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     captureCalib(hObject, handles);
     frame = getFrame(hObject, handles);
     initViewports(handles, frame);
-   
+    
     while handles.analyze
+        if(handles.vid.FramesAvailable == 0)
+            continue
+        end
         tic;
         frame = getFrame(hObject, handles);
+        flushdata(handles.vid);
         
+        toc;
+        tic;
         enhanced = enhance(frame, handles);
         statTest(enhanced{2}, handles);
         %analyze(enhanced, handles);
-        
+
         displayMain(handles, frame);
         displayOriginal(handles, frame);
         displayFiltered(handles, toMatrix(3, enhanced{1}));
@@ -165,6 +172,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         % Update handles
         handles = guidata(hObject);
+
         toc;
     end 
 
@@ -200,8 +208,14 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     delete(hObject);
 
 function captureCalib(hObject, handles)
-    handles.calib_img = normalise(getdata(handles.vid, 1));
-    handles.lift_segmented = segmentLift(handles.calib_img);
+    if strcmp(handles.input_source, 'camera')
+        handles.calib_img = normalise(getdata(handles.vid, 1));
+        handles.lift_segmented = segmentLift(handles.calib_img);
+    elseif strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
+        handles.calib_img = normalise(read(handles.loaded_video, handles.lv_frame_index), handles);
+        handles.lift_segmented = segmentLift(handles.calib_img);
+    end
+    
     guidata(hObject, handles);
 
 % --- Executes on button press in backgroundCatch.
@@ -222,4 +236,34 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
 
     handles.input_source = 'file';
     handles.loaded_video = loadedVideo;
+    handles.lv_frame_index = 1;
+    
+    set(handles.slider1, 'Min', 0, 'Max', handles.loaded_video.NumberOfFrames, 'SliderStep', [1/(handles.loaded_video.NumberOfFrames/10) 1/(handles.loaded_video.NumberOfFrames/10)]);
+    
     guidata(hObject, handles);
+
+
+% --- Executes on slider movement.
+function slider1_Callback(hObject, eventdata, handles)
+% hObject    handle to slider1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+handles.lv_frame_index = round(get(hObject,'Value'));
+
+guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function slider1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
