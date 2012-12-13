@@ -78,6 +78,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.traffic_inview = 0;
     handles.output = hObject;
     handles.debug = '';
+    handles.lift_bounds = [0, 0; 100, 100];
     last_frame = 0;
     
     % Update handles structure
@@ -238,13 +239,15 @@ function captureCalib(hObject, handles)
     handles.calib_img = normalise(frame, handles);
     handles.lift_segmented = segmentLift(handles.calib_img);
     handles.lift_labeled = labelLift(handles.lift_segmented);
+    
     msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
                   1, 300, 0);
-    minX = msr(1).Minimum(1);
-    minY = msr(1).Minimum(2);
-    maxX = msr(1).Maximum(1);
-    maxY = msr(1).Maximum(2);
-    handles.lift_bounds = [minX, minY; maxX, maxY];
+    if size(msr, 1) > 0
+        minX = msr(1).Minimum(1);
+        minY = msr(1).Minimum(2);
+        maxX = msr(1).Maximum(1);
+        maxY = msr(1).Maximum(2);
+        handles.lift_bounds = [minX, minY; maxX, maxY];
     guidata(hObject, handles);
 
 % --- Executes on button press in backgroundCatch.
