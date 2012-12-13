@@ -248,6 +248,7 @@ function captureCalib(hObject, handles)
         maxX = msr(1).Maximum(1);
         maxY = msr(1).Maximum(2);
         handles.lift_bounds = [minX, minY; maxX, maxY];
+    end
     guidata(hObject, handles);
 
 % --- Executes on button press in backgroundCatch.
