@@ -53,15 +53,15 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
     
     % Reset the image-aquisition toolkit
-    imaqreset;
+    %imaqreset;
     
     % Init DIPLib
     dipstart;
     
     % Init our custom global properties
-    handles.vid = videoinput('winvideo');
-    set(handles.vid, 'TriggerRepeat', inf);
-    set(handles.vid, 'ReturnedColorSpace','RGB');
+    %handles.vid = videoinput('winvideo');
+    %set(handles.vid, 'TriggerRepeat', inf);
+    %set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
     handles.input_source = 'camera';
@@ -229,7 +229,7 @@ function captureCalib(hObject, handles)
     handles.lift_segmented = segmentLift(handles.calib_img);
     handles.lift_labeled = labelLift(handles.lift_segmented);
     msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
-                  Inf, 300, 0);
+                  1, 300, 0);
     minX = msr(1).Minimum(1);
     minY = msr(1).Minimum(2);
     maxX = msr(1).Maximum(1);
