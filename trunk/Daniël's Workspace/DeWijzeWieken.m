@@ -159,12 +159,10 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         if(handles.vid.FramesAvailable == 0)
             continue
         end
-        tic;
+
         frame = getFrame(hObject, handles);
         flushdata(handles.vid);
-        
-        toc;
-        tic;
+
         enhanced = enhance(frame, handles);
         statTest(enhanced{2}, handles);
         %analyze(enhanced, handles);
@@ -177,7 +175,6 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         % Update handles
         handles = guidata(hObject);
 
-        toc;
     end 
 
     stop(handles.vid);
