@@ -1,212 +1,304 @@
 function varargout = DeWijzeWieken(varargin)
-% DEWIJZEWIEKEN MATLAB code for DeWijzeWieken.fig
-%      DEWIJZEWIEKEN, by itself, creates a new DEWIJZEWIEKEN or raises the existing
-%      singleton*.
-%
-%      H = DEWIJZEWIEKEN returns the handle to a new DEWIJZEWIEKEN or the handle to
-%      the existing singleton*.
-%
-%      DEWIJZEWIEKEN('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DEWIJZEWIEKEN.M with the given input arguments.
-%
-%      DEWIJZEWIEKEN('Property','Value',...) creates a new DEWIJZEWIEKEN or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before DeWijzeWieken_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to DeWijzeWieken_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
+    % DEWIJZEWIEKEN MATLAB code for DeWijzeWieken.fig
+    %      DEWIJZEWIEKEN, by itself, creates a new DEWIJZEWIEKEN or raises the existing
+    %      singleton*.
+    %
+    %      H = DEWIJZEWIEKEN returns the handle to a new DEWIJZEWIEKEN or the handle to
+    %      the existing singleton*.
+    %
+    %      DEWIJZEWIEKEN('CALLBACK',hObject,eventData,handles,...) calls the local
+    %      function named CALLBACK in DEWIJZEWIEKEN.M with the given input arguments.
+    %
+    %      DEWIJZEWIEKEN('Property','Value',...) creates a new DEWIJZEWIEKEN or raises the
+    %      existing singleton*.  Starting from the left, property value pairs are
+    %      applied to the GUI before DeWijzeWieken_OpeningFcn gets called.  An
+    %      unrecognized property name or invalid value makes property application
+    %      stop.  All inputs are passed to DeWijzeWieken_OpeningFcn via varargin.
+    %
+    %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+    %      instance to run (singleton)".
+    %
+    % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help DeWijzeWieken
+    % Edit the above text to modify the response to help DeWijzeWieken
 
-% Last Modified by GUIDE v2.5 26-Nov-2012 10:07:37
+    % Last Modified by GUIDE v2.5 06-Dec-2012 11:22:26
 
-% Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
-gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DeWijzeWieken_OpeningFcn, ...
-                   'gui_OutputFcn',  @DeWijzeWieken_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
-if nargin && ischar(varargin{1})
-    gui_State.gui_Callback = str2func(varargin{1});
-end
+    % Begin initialization code - DO NOT EDIT
+    gui_Singleton = 1;
+    gui_State = struct('gui_Name',       mfilename, ...
+                       'gui_Singleton',  gui_Singleton, ...
+                       'gui_OpeningFcn', @DeWijzeWieken_OpeningFcn, ...
+                       'gui_OutputFcn',  @DeWijzeWieken_OutputFcn, ...
+                       'gui_LayoutFcn',  [] , ...
+                       'gui_Callback',   []);
+    if nargin && ischar(varargin{1})
+        gui_State.gui_Callback = str2func(varargin{1});
+    end
 
-if nargout
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
-else
-    gui_mainfcn(gui_State, varargin{:});
-end
-% End initialization code - DO NOT EDIT
+    if nargout
+        [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+    else
+        gui_mainfcn(gui_State, varargin{:});
+    end
+    % End initialization code - DO NOT EDIT
 
 
 % --- Executes just before DeWijzeWieken is made visible.
 function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to DeWijzeWieken (see VARARGIN)
-imaqreset;
+    % This function has no output args, see OutputFcn.
+    % hObject    handle to figure
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
+    
+    % Reset the image-aquisition toolkit
+    %imaqreset;
+    
+    % Init DIPLib
+    dipstart;
+    
+    global last_frame;
+    
+    % Init our custom global properties
+    %handles.vid = videoinput('winvideo');
+    %set(handles.vid, 'TriggerRepeat', inf);
+    %set(handles.vid, 'ReturnedColorSpace','RGB');
+    
+    handles.analyze = false;
+    handles.input_source = 'camera';
+    handles.loaded_video = 0;
+    handles.lv_frame_index = 1;
+    handles.calib_img = 0;
+    handles.lift_segmented = 0;
+    handles.history = [0, 0];
+    handles.traffic_total = 0;
+    handles.traffic_out = 0;
+    handles.traffic_in = 0;
+    handles.traffic_inview = 0;
+    handles.output = hObject;
+    handles.debug = '';
+    handles.lift_bounds = [0, 0; 100, 100];
+    last_frame = 0;
+    
+    % Update handles structure
+    guidata(hObject, handles);
 
-vid = videoinput('winvideo', 1, 'RGB24_320x240');
-%vid = videoinput('winvideo');
-set(vid, 'TriggerRepeat', inf);
-set(vid, 'FrameGrabInterval', 1);
-%set(vid, 'ReturnedColorSpace', 'grayscale')
-set(vid, 'ReturnedColorSpace','RGB');
-handles.vid = vid;
-
-global waar;
-waar = false;
-
-% Choose default command line output for DeWijzeWieken
-handles.output = hObject;
-
-% Update handles structure
-guidata(hObject, handles);
-
-dipstart;
-
-% UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+    % UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
+    % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
 function varargout = DeWijzeWieken_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    % varargout  cell array for returning output args (see VARARGOUT);
+    % hObject    handle to figure
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
 
-% Get default command line output from handles structure
-varargout{1} = handles.output;
+    % Get default command line output from handles structure
+    varargout{1} = handles.output;
 
+% Initializes all the viewports on the GUI by placing an initial image
+% in them.
+function initViewports(handles, frame)
+    ports = [ handles.axes1, ... 
+              handles.axes2, ... 
+              handles.axes3, ... 
+              handles.axes4 ];
+    for i = 1:size(ports, 2)
+        axes(ports(i));
+        image(frame);
+    end
 
+% Retrieves a single frame from source (camera or file) as specified by 
+% the handles.input_source variable.
+function frame = getFrame(hObject, handles)
+    if strcmp(handles.input_source, 'camera')
+        frame = getdata(handles.vid, 1);
+    end
+    if strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
+         frame = read(handles.loaded_video, handles.lv_frame_index);
+         if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
+            handles.lv_frame_index = handles.lv_frame_index + 1;
+            set(handles.slider1, 'Value', handles.lv_frame_index);
+         end
+         % Maintain frame-rate
+         pause(1 / handles.loaded_video.FrameRate);
+    end   
+    
+    guidata(hObject, handles);
+
+% Displays a given frame on given viewport.
+function displayFrame(axes, frame)
+    h = get(axes, 'Children');
+    set(h, 'CData', frame);
+
+% Displays a frame on the main (and largest) viewport.
+function displayMain(handles, frame)
+    displayFrame(handles.axes1, frame);
+
+% Displays a frame on the 'original image' viewport.
+function displayOriginal(handles, frame)
+    displayFrame(handles.axes2, frame);
+
+% Displays a frame on the 'post-filtering' viewport.
+function displayFiltered(handles, frame)
+    displayFrame(handles.axes3, frame);
+
+% Displays a frame on the 'post-processing' viewport.
+function displayProcessed(handles, frame)
+    displayFrame(handles.axes4, frame);
+
+% Update the statistics on the GUI
+function displayStats(handles)
+    set(handles.Stats1, 'String', ...
+        ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
+         'Outgoing: ', num2str(handles.traffic_out), char(10), ...
+         'Total: ', num2str(handles.traffic_total), char(10), ...
+         'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Debug: ', handles.debug]);
+    drawnow
+ 
 % --- Executes on button press in startAnalyse.
 function startAnalyse_Callback(hObject, eventdata, handles)
-% hObject    handle to startAnalyse (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-global waar;
-waar = true;
-
-start(handles.vid);
-data = getdata(handles.vid, 1);
-
-axes(handles.axes1);
-image(data);
-
-axes(handles.axes2);
-image(data);
-
-axes(handles.axes3);
-image(data);
-
-axes(handles.axes4);
-image(data);
-
-global liftBackground;
-liftBackground = normalise(getdata(handles.vid, 1));
-
-while waar == true
-    data = getdata(handles.vid, 2);
+    % hObject    handle to startAnalyse (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+   
+    global last_frame last_frame_temp;
     
+    % Flag analysis start
+    handles.analyze = true;
     
-    %disp(liftBackground);
+    % Start video retrieval and initialise viewports
+    if strcmp(handles.input_source, 'camera')
+        start(handles.vid);
+    end
+  
+    captureCalib(hObject, handles);
+    handles = guidata(hObject);
+    frame = getFrame(hObject, handles);
+    handles = guidata(hObject);
+    initViewports(handles, frame);
     
-    n = normalise(data(:,:,:,2));
-    s = segmentation(n,liftBackground);
-    %l = labeling(s);
-    %p = property(n);
-    %c = classification(p);
-    %t = count(c);
-    
-	h = get(handles.axes1, 'Children');
-	set(h, 'CData', data(:,:,:,2));
-    
-    h = get(handles.axes2, 'Children');
-    set(h, 'CData', n);
-	
-    %set(h, 'CData', data(:,:,:,2));
-    %set(h, 'CData', s);
-    
-    h = get(handles.axes3, 'Children');
-    set(h, 'CData', toMatrix(3,s,s,s));
-    
-    %*h = get(handles.axes4, 'Children');
-    %temp = zeros(size(n, 1), size(n, 2), 3);
-    %temp(:,:,1) = s;
-    %temp(:,:,2) = s;
-    %temp(:,:,3) = s;
-	%set(h, 'CData', temp.*n);*/
-    
-    h = get(handles.axes4, 'Children');
-    set(h, 'CData', data(:,:,:,2));
-    
-    msr = measure(s,[],{'Size','Minimum','CartesianBox'},[],Inf,2000,0);
-    c = size(msr);
-    if c(1) > 0
-        set(handles.text2, 'String', ['Oppervlakte : ', num2str(msr.size)]);
-        set(handles.text3, 'String', ['Verhoudingen : ', num2str(msr.CartesianBox(1)), ':', num2str(msr.CartesianBox(2))]);
-    else
-        set(handles.text2, 'String', 'Oppervlakte  : -');
-        set(handles.text3, 'String', 'Verhoudingen : -');
+    while handles.analyze
+        tic;
+        frame = getFrame(hObject, handles);
+        handles = guidata(hObject);
+        enhanced = enhance(frame, handles);
+        analyze(enhanced, hObject, handles);
+        handles = guidata(hObject);
+        
+        displayMain(handles, frame);
+        displayOriginal(handles, frame);
+        displayFiltered(handles, toMatrix(3, enhanced{1}));
+        displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
+        displayStats(handles);
+        
+        % Update handles
+        handles = guidata(hObject);
+        
+        %save frame for next itteration
+        last_frame = last_frame_temp;
+        toc;
     end
     
-    set(handles.text1, 'String', ['Aantal objecten: ', num2str(c(1))]);
-    
-    drawnow
-end
-
-stop(handles.vid);
-
+    if strcmp(handles.input_source, 'camera')
+        stop(handles.vid);
+    end
 
 % --- Executes on button press in stopAnalyse.
 function stopAnalyse_Callback(hObject, eventdata, handles)
-% hObject    handle to stopAnalyse (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-clear handles.vid;
-
-global waar;
-waar = false;
-
-guidata(hObject, handles);
-
-
+    % hObject    handle to stopAnalyse (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    
+    handles.analyze = false;
+    guidata(hObject, handles);
 
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    % hObject    handle to figure1 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: delete(hObject) closes the figure
+    % Hint: delete(hObject) closes the figure
 
-% Stop the video stream
-global waar;
-waar = false;
+    % Stop the video stream
+    handles.analyze = false;
+    guidata(hObject, handles);
+    
+    stop(handles.vid);
+    delete(hObject);
 
-stop(handles.vid);
-
-delete(hObject);
-
+% Capture calibration image and save it.
+function captureCalib(hObject, handles)
+    frame = getFrame(hObject, handles);
+    handles = guidata(hObject);
+    handles.calib_img = normalise(frame, handles);
+    handles.lift_segmented = segmentLift(handles.calib_img);
+    handles.lift_labeled = labelLift(handles.lift_segmented);
+    
+    msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
+                  1, 300, 0);
+    if size(msr, 1) > 0
+        minX = msr(1).Minimum(1);
+        minY = msr(1).Minimum(2);
+        maxX = msr(1).Maximum(1);
+        maxY = msr(1).Maximum(2);
+        handles.lift_bounds = [minX, minY; maxX, maxY];
+    end
+    guidata(hObject, handles);
 
 % --- Executes on button press in backgroundCatch.
 function backgroundCatch_Callback(hObject, eventdata, handles)
-% hObject    handle to backgroundCatch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global liftBackground;
-liftBackground = normalise(getdata(handles.vid, 1));
-%h = get(handles.axes2, 'Children');
-%set(h, 'CData', liftBackground);
-%disp(liftBackground);
+    % hObject    handle to backgroundCatch (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    captureCalib(hObject, handles);
+    
+
+% --- Executes on button press in loadVideoButton.
+function loadVideoButton_Callback(hObject, eventdata, handles)
+    % hObject    handle to loadVideoButton (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
+   
+    handles.input_source = 'file';
+    handles.loaded_video = videoLoader(FileName);
+    handles.lv_frame_index = 1;
+    set(handles.slider1, 'Min', 0, 'Max', ...
+        handles.loaded_video.NumberOfFrames, 'SliderStep', ...
+        [1 /(handles.loaded_video.NumberOfFrames/10), ...
+         1 /(handles.loaded_video.NumberOfFrames/10)]);
+    captureCalib(hObject, handles);
+    
+    guidata(hObject, handles);
+
+% --- Executes on slider movement.
+function slider1_Callback(hObject, eventdata, handles)
+    % hObject    handle to slider1 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+
+    % Hints: get(hObject,'Value') returns position of slider
+    %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+    handles.lv_frame_index = round(get(hObject,'Value'));
+
+    guidata(hObject, handles);
+
+
+% --- Executes during object creation, after setting all properties.
+function slider1_CreateFcn(hObject, eventdata, handles)
+    % hObject    handle to slider1 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    empty - handles not created until after all CreateFcns called
+
+    % Hint: slider controls usually have a light gray background.
+    if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor',[.9 .9 .9]);
+    end
+
