@@ -53,15 +53,15 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
     
     % Reset the image-aquisition toolkit
-    imaqreset;
+    %imaqreset;
     
     % Init DIPLib
     dipstart;
     
     % Init our custom global properties
-    handles.vid = videoinput('winvideo');
-    set(handles.vid, 'TriggerRepeat', inf);
-    set(handles.vid, 'ReturnedColorSpace','RGB');
+    %handles.vid = videoinput('winvideo');
+    %set(handles.vid, 'TriggerRepeat', inf);
+    %set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
     handles.input_source = 'camera';
@@ -75,6 +75,14 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.traffic_in = 0;
     handles.traffic_inview = 0;
     handles.output = hObject;
+    handles.debug = '';
+    handles.lift_bounds = [0, 0; 100, 100];
+    handles.current_frame = 0;
+    handles.prev_frame = 0;
+    
+    %Init empty array that will contain list of previous objects in image
+    %for classification
+    handles.classificationPreviousObjectList = [];
     
     % Update handles structure
     guidata(hObject, handles);
@@ -121,6 +129,8 @@ function frame = getFrame(hObject, handles)
          pause(1 / handles.loaded_video.FrameRate);
     end   
     
+    handles.prev_frame = handles.current_frame;
+    handles.current_frame = frame;
     guidata(hObject, handles);
 
 % Displays a given frame on given viewport.
@@ -150,15 +160,16 @@ function displayStats(handles)
         ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
          'Outgoing: ', num2str(handles.traffic_out), char(10), ...
          'Total: ', num2str(handles.traffic_total), char(10), ...
-         'In view: ', num2str(handles.traffic_inview)]);
-     drawnow
+         'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Debug: ', handles.debug]);
+    drawnow
  
 % --- Executes on button press in startAnalyse.
 function startAnalyse_Callback(hObject, eventdata, handles)
     % hObject    handle to startAnalyse (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-   
+    
     % Flag analysis start
     handles.analyze = true;
     
@@ -189,6 +200,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         % Update handles
         handles = guidata(hObject);
+        
         toc;
     end
     
@@ -228,13 +240,18 @@ function captureCalib(hObject, handles)
     handles.calib_img = normalise(frame, handles);
     handles.lift_segmented = segmentLift(handles.calib_img);
     handles.lift_labeled = labelLift(handles.lift_segmented);
+    
+    % Measure and save lift-bounds:
     msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
-                  Inf, 300, 0);
-    minX = msr(1).Minimum(1);
-    minY = msr(1).Minimum(2);
-    maxX = msr(1).Maximum(1);
-    maxY = msr(1).Maximum(2);
-    handles.lift_bounds = [minX, minY; maxX, maxY];
+                  1, 300, 0);
+    if size(msr, 1) > 0
+        minX = msr(1).Minimum(1);
+        minY = msr(1).Minimum(2);
+        maxX = msr(1).Maximum(1);
+        maxY = msr(1).Maximum(2);
+        handles.lift_bounds = [minX, minY; maxX, maxY];
+    end
+    
     guidata(hObject, handles);
 
 % --- Executes on button press in backgroundCatch.
@@ -252,6 +269,8 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     % handles    structure with handles and user data (see GUIDATA)
     [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
    
+    disp('Loading video...');
+    
     handles.input_source = 'file';
     handles.loaded_video = videoLoader(FileName);
     handles.lv_frame_index = 1;
@@ -260,6 +279,8 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
         [1 /(handles.loaded_video.NumberOfFrames/10), ...
          1 /(handles.loaded_video.NumberOfFrames/10)]);
     captureCalib(hObject, handles);
+    
+    disp('Video loaded.');
     
     guidata(hObject, handles);
 

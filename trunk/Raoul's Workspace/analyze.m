@@ -14,6 +14,5 @@ function info = analyze(imgs, hObject, gui_handle)
     
     % Update handles and history:
     gui_handle = updated_handle;
-    gui_handle.history = [gui_handle.history; info];
     guidata(hObject, gui_handle);
     

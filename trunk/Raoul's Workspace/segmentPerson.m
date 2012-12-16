@@ -4,20 +4,17 @@
 % Returns: Segmented image (with person segments)
 
 function segmented = segmentPerson(img, gui_handle)
-    liftBackground = gui_handle.calib_img;
-    diff1 = img - liftBackground;
-    diff2 = liftBackground - img;
-    diff_thres = 25;
+    grayCurrent = dip_image(rgb2gray(gui_handle.current_frame));
+    grayPrev = dip_image(rgb2gray(gui_handle.prev_frame));
+    grayCalib = dip_image(rgb2gray(dip_array(gui_handle.calib_img)));
+    delta = grayCurrent - grayCalib;
+    delta2 = grayCalib - grayCurrent;
+    movement = grayCurrent - grayPrev;
+    movement2 = grayPrev - grayCurrent;
+    thres = 120;
+    moveThres = 15;
     
-    r = diff1{1} > diff_thres;
-    g = diff1{2} > diff_thres;
-    b = diff1{3} > diff_thres;
-    r2 = diff2{1} > diff_thres;
-    g2 = diff2{2} > diff_thres;
-    b2 = diff2{3} > diff_thres;
+    post_thres = movement > moveThres | movement2 > moveThres;
+    dilated = dilation(post_thres, 10, 'diamond');
+    segmented = closing(dilated, 14, 'elliptic');
     
-    temp = r | g | b | r2 | g2 | b2;
-    temp = erosion (temp, 7, 'elliptic');
-    temp = dilation(temp, 7, 'elliptic');
-    
-    segmented = temp;
