@@ -79,6 +79,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
+    handles.classificationPreviousObjectList = [];
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
@@ -188,7 +189,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     initViewports(handles, frame);
     
     while handles.analyze
-        tic;
+        %tic;
         frame = getFrame(hObject, handles);
         flushdata(handles.vid);
         
@@ -208,7 +209,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         %save frame for next itteration
         last_frame = last_frame_temp;
-        toc;
+        %toc;
     end
     
     if strcmp(handles.input_source, 'camera')
