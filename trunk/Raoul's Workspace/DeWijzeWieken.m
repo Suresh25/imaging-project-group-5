@@ -53,15 +53,17 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
     
     % Reset the image-aquisition toolkit
-    %imaqreset;
+    imaqreset;
     
     % Init DIPLib
     dipstart;
     
+    global last_frame;
+    
     % Init our custom global properties
-    %handles.vid = videoinput('winvideo');
-    %set(handles.vid, 'TriggerRepeat', inf);
-    %set(handles.vid, 'ReturnedColorSpace','RGB');
+    handles.vid = videoinput('winvideo');
+    set(handles.vid, 'TriggerRepeat', inf);
+    set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
     handles.input_source = 'camera';
@@ -77,12 +79,14 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
-    handles.current_frame = 0;
-    handles.prev_frame = 0;
+    handles.persons_labeled = 0;
+    last_frame = 0;
     
+    %%%%%%%%% Removed because propably not used anymore
     %Init empty array that will contain list of previous objects in image
     %for classification
-    handles.classificationPreviousObjectList = [];
+    %handles.classificationPreviousObjectList = [];
+    %%%%%%%%%
     
     % Update handles structure
     guidata(hObject, handles);
@@ -118,19 +122,17 @@ function initViewports(handles, frame)
 function frame = getFrame(hObject, handles)
     if strcmp(handles.input_source, 'camera')
         frame = getdata(handles.vid, 1);
-    end
-    if strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
+    elseif strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
          frame = read(handles.loaded_video, handles.lv_frame_index);
          if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
             handles.lv_frame_index = handles.lv_frame_index + 1;
+            
             set(handles.slider1, 'Value', handles.lv_frame_index);
          end
          % Maintain frame-rate
          pause(1 / handles.loaded_video.FrameRate);
     end   
     
-    handles.prev_frame = handles.current_frame;
-    handles.current_frame = frame;
     guidata(hObject, handles);
 
 % Displays a given frame on given viewport.
@@ -169,6 +171,8 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     % hObject    handle to startAnalyse (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+   
+    global last_frame last_frame_temp;
     
     % Flag analysis start
     handles.analyze = true;
@@ -187,12 +191,18 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     while handles.analyze
         tic;
         frame = getFrame(hObject, handles);
+        flushdata(handles.vid);
+        
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
         analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
-        displayMain(handles, frame);
+       % original = joinchannels('rgb', dip_image(frame));
+       % disp(max(max(max(frame))))
+        decor = decoratePersons(newim(320, 240), handles);
+        
+        displayMain(handles, toMatrix(3, decor, decor));
         displayOriginal(handles, frame);
         displayFiltered(handles, toMatrix(3, enhanced{1}));
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
@@ -201,6 +211,8 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         % Update handles
         handles = guidata(hObject);
         
+        %save frame for next itteration
+        last_frame = last_frame_temp;
         toc;
     end
     
@@ -241,7 +253,6 @@ function captureCalib(hObject, handles)
     handles.lift_segmented = segmentLift(handles.calib_img);
     handles.lift_labeled = labelLift(handles.lift_segmented);
     
-    % Measure and save lift-bounds:
     msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
                   1, 300, 0);
     if size(msr, 1) > 0
@@ -251,8 +262,34 @@ function captureCalib(hObject, handles)
         maxY = msr(1).Maximum(2);
         handles.lift_bounds = [minX, minY; maxX, maxY];
     end
-    
     guidata(hObject, handles);
+
+    
+function boxes = getBoundries(labeled_img)
+    msr = measure(labeled_img, [], {'Minimum', 'Maximum'}, [], ...
+                  1, 0, 0);
+    boxes = cell(1, size(msr, 1));
+    for i=1:size(msr, 1)
+        minX = msr(i).Minimum(1);
+        minY = msr(i).Minimum(2);
+        maxX = msr(i).Maximum(1);
+        maxY = msr(i).Maximum(2);
+        box = [minX, minY; maxX, maxY];
+        boxes{i} = box;
+    end
+   
+function decorated = decoratePersons(img, handles)
+    bounding_boxes = getBoundries(handles.persons_labeled);
+    for i=1:size(bounding_boxes, 2),
+        box = bounding_boxes{i};
+        topleft = [box(1,1), box(1,2)];
+        topright = [box(2,1), box(1,2)];
+        botleft = [box(1,1), box(2,2)];
+        botright = [box(2,1), box(2,2)];
+        coords = [topleft; topright; botright; botleft];
+        img = drawpolygon(img, coords, 1, 'closed');
+    end
+    decorated = img;
 
 % --- Executes on button press in backgroundCatch.
 function backgroundCatch_Callback(hObject, eventdata, handles)
@@ -269,8 +306,6 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     % handles    structure with handles and user data (see GUIDATA)
     [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
    
-    disp('Loading video...');
-    
     handles.input_source = 'file';
     handles.loaded_video = videoLoader(FileName);
     handles.lv_frame_index = 1;
@@ -279,8 +314,6 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
         [1 /(handles.loaded_video.NumberOfFrames/10), ...
          1 /(handles.loaded_video.NumberOfFrames/10)]);
     captureCalib(hObject, handles);
-    
-    disp('Video loaded.');
     
     guidata(hObject, handles);
 
