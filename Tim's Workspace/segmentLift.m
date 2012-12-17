@@ -16,7 +16,7 @@ function res = segmentLift(img)
     resX = derXR & derXG & derXB;
     resY = derYR & derYG & derYB;
     
-    res = resX & resY;
+    res = resX | resY;
     
     %res = rgb2gray(dip_array(img));
     %res = dip_image(res);
