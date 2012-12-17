@@ -1,8 +1,8 @@
 % liftDetect(img)
 % img = Joined rgb dipimage.
-% Returns: Labeled image (with lifts labeled)
+% Returns: DIPImage (with lifts segmented)
 
-function labeled_img = liftDetect(img)
+function seg_img = liftDetect(img)
     r = img{1};
     g = img{2};
     b = img{3};
@@ -23,5 +23,5 @@ function labeled_img = liftDetect(img)
     filtered_img = dilation(filtered_img, 4, 'elliptic');
     filtered_img = erosion(filtered_img, 4, 'elliptic');
 
-    labeled_img = filtered_img;
+    seg_img = filtered_img;
     % labeled_img = label(filtered_img, Inf, 200, 0);
