@@ -1,3 +1,4 @@
+% img - 
 function visible = liftVisible2(img)
     % Some constants:
     % minArea = The area of the lift when closed.
