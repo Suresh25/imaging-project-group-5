@@ -22,7 +22,7 @@ function varargout = DeWijzeWieken(varargin)
 
     % Edit the above text to modify the response to help DeWijzeWieken
 
-    % Last Modified by GUIDE v2.5 09-Dec-2012 20:56:16
+    % Last Modified by GUIDE v2.5 06-Dec-2012 11:22:26
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -51,37 +51,44 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
-
+    
     % Reset the image-aquisition toolkit
     imaqreset;
-
-    % Init our video-input and its properties:
-    vid = videoinput('winvideo');
-    set(vid, 'TriggerRepeat', inf);
-    %set(vid, 'FrameGrabInterval', 5);
-    set(vid, 'ReturnedColorSpace','RGB');
-    % vid = videoinput('winvideo', 1, 'RGB24_320x240');
-    % set(vid, 'ReturnedColorSpace', 'grayscale');
+    
+    % Init DIPLib
+    dipstart;
+    
+    global last_frame;
     
     % Init our custom global properties
-    handles.vid = vid;
+    handles.vid = videoinput('winvideo');
+    set(handles.vid, 'TriggerRepeat', inf);
+    set(handles.vid, 'ReturnedColorSpace','RGB');
+    
     handles.analyze = false;
     handles.input_source = 'camera';
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
     handles.lift_segmented = 0;
+    handles.history = [0, 0];
+    handles.traffic_total = 0;
+    handles.traffic_out = 0;
+    handles.traffic_in = 0;
+    handles.traffic_inview = 0;
     handles.output = hObject;
+    handles.debug = '';
+    handles.lift_bounds = [0, 0; 100, 100];
+    last_frame = 0;
     
+    %%%%%%%%% Removed because propably not used anymore
     %Init empty array that will contain list of previous objects in image
     %for classification
-    handles.classificationPreviousObjectList = [];
-
+    %handles.classificationPreviousObjectList = [];
+    %%%%%%%%%
+    
     % Update handles structure
     guidata(hObject, handles);
-    
-    % Init DIPLib
-    dipstart;
 
     % UIWAIT makes DeWijzeWieken wait for user response (see UIRESUME)
     % uiwait(handles.figure1);
@@ -97,7 +104,8 @@ function varargout = DeWijzeWieken_OutputFcn(hObject, eventdata, handles)
     % Get default command line output from handles structure
     varargout{1} = handles.output;
 
-
+% Initializes all the viewports on the GUI by placing an initial image
+% in them.
 function initViewports(handles, frame)
     ports = [ handles.axes1, ... 
               handles.axes2, ... 
@@ -108,6 +116,8 @@ function initViewports(handles, frame)
         image(frame);
     end
 
+% Retrieves a single frame from source (camera or file) as specified by 
+% the handles.input_source variable.
 function frame = getFrame(hObject, handles)
     if strcmp(handles.input_source, 'camera')
         frame = getdata(handles.vid, 1);
@@ -115,82 +125,104 @@ function frame = getFrame(hObject, handles)
          frame = read(handles.loaded_video, handles.lv_frame_index);
          if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
             handles.lv_frame_index = handles.lv_frame_index + 1;
-            guidata(hObject, handles);
             
             set(handles.slider1, 'Value', handles.lv_frame_index);
          end
          % Maintain frame-rate
          pause(1 / handles.loaded_video.FrameRate);
-    end    
-        
+    end   
+    
+    guidata(hObject, handles);
+
+% Displays a given frame on given viewport.
 function displayFrame(axes, frame)
     h = get(axes, 'Children');
     set(h, 'CData', frame);
-    
+
+% Displays a frame on the main (and largest) viewport.
 function displayMain(handles, frame)
     displayFrame(handles.axes1, frame);
 
+% Displays a frame on the 'original image' viewport.
 function displayOriginal(handles, frame)
     displayFrame(handles.axes2, frame);
 
+% Displays a frame on the 'post-filtering' viewport.
 function displayFiltered(handles, frame)
     displayFrame(handles.axes3, frame);
 
+% Displays a frame on the 'post-processing' viewport.
 function displayProcessed(handles, frame)
     displayFrame(handles.axes4, frame);
 
+% Update the statistics on the GUI
+function displayStats(handles)
+    set(handles.Stats1, 'String', ...
+        ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
+         'Outgoing: ', num2str(handles.traffic_out), char(10), ...
+         'Total: ', num2str(handles.traffic_total), char(10), ...
+         'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Debug: ', handles.debug]);
+    drawnow
+ 
 % --- Executes on button press in startAnalyse.
 function startAnalyse_Callback(hObject, eventdata, handles)
     % hObject    handle to startAnalyse (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
    
+    global last_frame last_frame_temp;
+    
     % Flag analysis start
     handles.analyze = true;
-    guidata(hObject, handles);
     
     % Start video retrieval and initialise viewports
-    start(handles.vid);
+    if strcmp(handles.input_source, 'camera')
+        start(handles.vid);
+    end
+  
     captureCalib(hObject, handles);
+    handles = guidata(hObject);
     frame = getFrame(hObject, handles);
+    handles = guidata(hObject);
     initViewports(handles, frame);
     
     while handles.analyze
-        if(handles.vid.FramesAvailable == 0)
-            continue
-        end
-
+        tic;
         frame = getFrame(hObject, handles);
         flushdata(handles.vid);
-
+        
+        handles = guidata(hObject);
         enhanced = enhance(frame, handles);
-        statTest(enhanced{2}, handles);
-        %analyze(enhanced, handles);
-
+        %analyze(enhanced, hObject, handles);
+        handles = guidata(hObject);
+        
         displayMain(handles, frame);
         displayOriginal(handles, frame);
         displayFiltered(handles, toMatrix(3, enhanced{1}));
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
+        displayStats(handles);
         
         % Update handles
         handles = guidata(hObject);
-
-    end 
-
-    stop(handles.vid);
-
+        
+        %save frame for next itteration
+        last_frame = last_frame_temp;
+        toc;
+    end
+    
+    if strcmp(handles.input_source, 'camera')
+        stop(handles.vid);
+    end
 
 % --- Executes on button press in stopAnalyse.
 function stopAnalyse_Callback(hObject, eventdata, handles)
     % hObject    handle to stopAnalyse (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
-
-    clear handles.vid;
+    
     handles.analyze = false;
     guidata(hObject, handles);
-
-
 
 
 % --- Executes when user attempts to close figure1.
@@ -204,20 +236,29 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     % Stop the video stream
     handles.analyze = false;
     guidata(hObject, handles);
+    
     stop(handles.vid);
-
     delete(hObject);
 
+% Capture calibration image and save it.
 function captureCalib(hObject, handles)
-    if strcmp(handles.input_source, 'camera')
-        handles.calib_img = normalise(getdata(handles.vid, 1));
-        handles.lift_segmented = segmentLift(handles.calib_img);
-    elseif strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
-        handles.calib_img = normalise(read(handles.loaded_video, handles.lv_frame_index), handles);
-        handles.lift_segmented = segmentLift(handles.calib_img);
-    end
+    frame = getFrame(hObject, handles);
+    handles = guidata(hObject);
+    handles.calib_img = normalise(frame, handles);
+    handles.lift_segmented = segmentLift(handles.calib_img);
+    handles.lift_labeled = labelLift(handles.lift_segmented);
     
+    msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
+                  1, 300, 0);
+    if size(msr, 1) > 0
+        minX = msr(1).Minimum(1);
+        minY = msr(1).Minimum(2);
+        maxX = msr(1).Maximum(1);
+        maxY = msr(1).Maximum(2);
+        handles.lift_bounds = [minX, minY; maxX, maxY];
+    end
     guidata(hObject, handles);
+    
 
 % --- Executes on button press in backgroundCatch.
 function backgroundCatch_Callback(hObject, eventdata, handles)
@@ -233,38 +274,40 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
     [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
-    loadedVideo = videoLoader(FileName);
-
+   
     handles.input_source = 'file';
-    handles.loaded_video = loadedVideo;
+    handles.loaded_video = videoLoader(FileName);
     handles.lv_frame_index = 1;
-    
-    set(handles.slider1, 'Min', 0, 'Max', handles.loaded_video.NumberOfFrames, 'SliderStep', [1/(handles.loaded_video.NumberOfFrames/10) 1/(handles.loaded_video.NumberOfFrames/10)]);
+    set(handles.slider1, 'Min', 0, 'Max', ...
+        handles.loaded_video.NumberOfFrames, 'SliderStep', ...
+        [1 /(handles.loaded_video.NumberOfFrames/10), ...
+         1 /(handles.loaded_video.NumberOfFrames/10)]);
+    captureCalib(hObject, handles);
     
     guidata(hObject, handles);
 
-
 % --- Executes on slider movement.
 function slider1_Callback(hObject, eventdata, handles)
-% hObject    handle to slider1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+    % hObject    handle to slider1 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+    % Hints: get(hObject,'Value') returns position of slider
+    %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
-handles.lv_frame_index = round(get(hObject,'Value'));
+    handles.lv_frame_index = round(get(hObject,'Value'));
 
-guidata(hObject, handles);
+    guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
 function slider1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
+    % hObject    handle to slider1 (see GCBO)
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
+    % Hint: slider controls usually have a light gray background.
+    if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor',[.9 .9 .9]);
+    end
+
