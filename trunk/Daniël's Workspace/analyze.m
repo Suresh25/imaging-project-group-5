@@ -7,7 +7,12 @@
 % Effects: Uses gui_handle to change properties of the GUI, so that
 %          relevant statistics will be displayed.
 
-function analyze(imgs, gui_handle)
-    labeled_img = labeling(imgs);
-    info = classify(labeled_img, gui_handle, handles.classificationPreviousObjectList);
-    compute(info, gui_handle);
+function info = analyze(imgs, hObject, gui_handle)
+    labels = labeling(imgs, gui_handle);
+    info = classify(labels{2}, gui_handle, handles.classificationPreviousObjectList);
+    updated_handle = compute(info, gui_handle);
+    
+    % Update handles and history:
+    gui_handle = updated_handle;
+    guidata(hObject, gui_handle);
+    

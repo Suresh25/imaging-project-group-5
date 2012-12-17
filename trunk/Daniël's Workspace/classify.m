@@ -13,10 +13,10 @@ function info = classify(img, gui_handle, objectList)
     msr = measure(img, [], {'size', 'center'}, [], 1, 0, 0);
     
     % Retrieve the elevator boundry-box from the main-app:
-    east = 270; % gui_handle.lift_bounds(1)
-    west = 50;
-    north = 20;
-    south = 200;
+    east = gui_handle.lift_bounds(2, 1);
+    west = gui_handle.lift_bounds(1, 1);
+    north = gui_handle.lift_bounds(1, 2);
+    south = gui_handle.lift_bounds(2, 2);
     
     for i = 1 : size(msr, 1)
         for j = 1 : size(objectList, 1)
@@ -39,7 +39,7 @@ function info = classify(img, gui_handle, objectList)
             %Check if object is situated at the same position as the
             %elevator
             if(west<= x <= east && north <= y <= south)
-                %~~~if(msr(i).size < objectList(j).size && currentObjSizes(i) == 0) [original if-statement]~~~
+                %~~~OLDif(msr(i).size < objectList(j).size && currentObjSizes(i) == 0) [original if-statement]~~~
                 %Check if the object's size has decreased since the previous iteration
                 if(msr(i).size < objectList(j).size)
                     timesShrunk(i) = timesShrunk(i) + 1;
@@ -51,7 +51,7 @@ function info = classify(img, gui_handle, objectList)
                         disp('Person entered lift, current value of inside: ' + inside)
                     end
                 end
-            %~~~else if(msr(i).size > objectList(j).size && currentObjSizes(i) > 0) [original if-statement]~~~
+            %~~~OLDelse if(msr(i).size > objectList(j).size && currentObjSizes(i) > 0) [original if-statement]~~~
             %Check if the object's size has increased since the previous iteration
             else if(msr(i).size > objectList(j).size)
                     timesGrown(i) = timesGrown(i) + 1;
