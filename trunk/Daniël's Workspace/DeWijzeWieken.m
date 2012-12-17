@@ -71,7 +71,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
     handles.lift_segmented = 0;
-    handles.history = [0, 0];
+    handles.history = [0, 0, 0];
     handles.traffic_total = 0;
     handles.traffic_out = 0;
     handles.traffic_in = 0;

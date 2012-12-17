@@ -11,10 +11,11 @@ function handle = compute(info, gui_handle)
     deltaOut = 0;
     currentIn = info(1);
     currentOut = info(2);
+    currentInView = info(3);
     
-    gui_handle.traffic_inview = currentIn + currentOut;
+    gui_handle.traffic_inview = currentInView;
     
-    approxIn = mode(gui_handle.history(:, 1));
+    approxIn = mode(gui_handle.history(:, 1, :));
     
     if approxIn > 0 && currentIn == 0
         deltaIn = approxIn;
@@ -29,7 +30,7 @@ function handle = compute(info, gui_handle)
     gui_handle.debug = num2str(size(gui_handle.history, 1));
     
     if deltaIn || deltaOut
-        gui_handle.history = [0, 0];
+        gui_handle.history = [0, 0, 0];
     end
     
     gui_handle.history = [gui_handle.history; info];
@@ -38,7 +39,7 @@ function handle = compute(info, gui_handle)
     cache_size = 30;  % Has to be >= 2
     history_size = size(gui_handle.history, 1);
     if history_size > cache_size
-        gui_handle.history = gui_handle.history(2: history_size, :);
+        gui_handle.history = gui_handle.history(2: history_size, :, :);
     end
     
     handle = gui_handle;

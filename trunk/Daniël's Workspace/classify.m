@@ -6,6 +6,7 @@
 function info = classify(img, gui_handle, objectList)
     inside = 0;
     outside = 0;
+    inView = 0;
     timesShrunk = [];
     timesGrown = [];
     
@@ -55,6 +56,8 @@ function info = classify(img, gui_handle, objectList)
     %disp('Size of object list is: ')
     %disp(size(objectList, 1))
    
+    inView = size(msr, 1);
+    
     gui_handle.classificationPreviousObjectList = msr;
     
-    info = [inside, outside];
+    info = [inside, outside, inView];
