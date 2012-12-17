@@ -1,5 +1,5 @@
 function res = segmentLift(img)
-    thres = 1;
+    thres = 2;
     derY = dyy(img);
     derX = dxx(img);
     
