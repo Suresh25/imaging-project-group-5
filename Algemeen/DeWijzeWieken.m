@@ -61,12 +61,12 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     global last_frame;
     
     % Init our custom global properties
-    handles.vid = videoinput('winvideo');
-    set(handles.vid, 'TriggerRepeat', inf);
-    set(handles.vid, 'ReturnedColorSpace','RGB');
+    %handles.vid = videoinput('winvideo');
+    %set(handles.vid, 'TriggerRepeat', inf);
+    %set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
-    handles.input_source = 'camera';
+    handles.input_source = 'video';
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
@@ -187,10 +187,22 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     handles = guidata(hObject);
     initViewports(handles, frame);
     
+    minX = handles.lift_bounds(1,1);
+    minY = handles.lift_bounds(1,2);
+    maxX = handles.lift_bounds(2,1);
+    maxY = handles.lift_bounds(2,2);
+    
+    img = handles.lift_segmented;
+    new = dip_image(zeros(240,320));
+    x = drawpolygon(new,[minX,minY; maxX,minY; maxX,maxY; minX,maxY],255,'closed');
+    x = dilation((x > 1),8,'rectangular');
+    x = img | x;
+    displayFiltered(handles, toMatrix(3,x,x,x));
+    
     while handles.analyze
         tic;
         frame = getFrame(hObject, handles);
-        flushdata(handles.vid);
+        %flushdata(handles.vid);
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
@@ -199,7 +211,6 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         displayMain(handles, frame);
         displayOriginal(handles, frame);
-        displayFiltered(handles, toMatrix(3, enhanced{1}));
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
         displayStats(handles);
         
