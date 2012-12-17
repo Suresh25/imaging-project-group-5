@@ -9,7 +9,7 @@
 
 function info = analyze(imgs, hObject, gui_handle)
     labels = labeling(imgs, gui_handle);
-    info = classify(labels{2}, gui_handle, handles.classificationPreviousObjectList);
+    info = classify(labels{2}, gui_handle, gui_handle.classificationPreviousObjectList);
     updated_handle = compute(info, gui_handle);
     
     % Update handles and history:
