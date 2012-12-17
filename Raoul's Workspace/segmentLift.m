@@ -1,27 +1,30 @@
-% segmentLift(img)
-% img = Normalised DIPImage.
-% gui_handle = the handles of a GUI.
-% Returns: Segmented image (with lift segments)
-
-function segmented = segmentLift(img, gui_handle)
-    r = img{1};
-    g = img{2};
-    b = img{3};
+function res = segmentLift(img)
+    thres = 2;
+    derY = dyy(img);
+    derX = dxx(img);
     
-    % Color-range of lift in normalised images:
-    r_thres = [90, 170];
-    g_thres = [20, 40];
-    b_thres = [0, 20];
-
-    % Generate rgb channels post threshold filter:
-    rt = threshold(r, 'double', r_thres);
-    gt = threshold(g, 'double', g_thres);
-    bt = threshold(b, 'double', b_thres);
-
-    filtered_img = rt & gt & bt;
-
-    % Closing and re-label:
-    filtered_img = dilation(filtered_img, 4, 'elliptic');
-    filtered_img = erosion(filtered_img, 4, 'elliptic');
-
-    segmented = filtered_img;
+    derYR = derY{1} > thres;
+    derXR = derX{1} > thres;
+    
+    derYG = derY{2} > thres;
+    derXG = derX{2} > thres;
+    
+    derXB = derX{3} > thres;
+    derYB = derY{3} > thres;
+    
+    
+    resX = derXR & derXG & derXB;
+    resY = derYR & derYG & derYB;
+    
+    res = resX | resY;
+    
+    %res = rgb2gray(dip_array(img));
+    %res = dip_image(res);
+    
+    %img = derR | derG | derB;
+    %img = berosion(img,1,1,1); 
+    %res = derXG | derYG;
+    %res = derX > 10;
+    %res = berosion(res,1,1,0);
+    %res = bdilation(res,5,2,0);
+    
