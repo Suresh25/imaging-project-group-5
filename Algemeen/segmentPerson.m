@@ -7,9 +7,9 @@ function segmented = segmentPerson(img, gui_handle)
     global last_frame;    
     liftBackground = gui_handle.calib_img;
     
-    liftBackground = gaussf(liftBackground,0.01,'best');
-    last_frame = gaussf(last_frame,0.01,'best');
-    img = gaussf(img,0.01,'best');
+    %liftBackground = gaussf(liftBackground,0.01,'best');
+    %last_frame = gaussf(last_frame,0.01,'best');
+    %img = gaussf(img,0.01,'best');
     % calculate difference between frame and saved background
     diff1 = img - liftBackground;
     diff2 = liftBackground - img;
