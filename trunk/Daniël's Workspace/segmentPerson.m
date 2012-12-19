@@ -7,9 +7,9 @@ function segmented = segmentPerson(img, gui_handle)
     global last_frame;    
     liftBackground = gui_handle.calib_img;
     
-    liftBackground = gaussf(liftBackground,0.01,'best');
-    last_frame = gaussf(last_frame,0.01,'best');
-    img = gaussf(img,0.01,'best');
+    %liftBackground = gaussf(liftBackground,0.01,'best');
+    %last_frame = gaussf(last_frame,0.01,'best');
+    %img = gaussf(img,0.01,'best');
     % calculate difference between frame and saved background
     diff1 = img - liftBackground;
     diff2 = liftBackground - img;
@@ -48,9 +48,9 @@ function segmented = segmentPerson(img, gui_handle)
     temp = erosion (temp, 7, 'elliptic');
     temp = dilation(temp, 7, 'elliptic');
     
-    temp = laplace(temp,1);
-    temp = temp > 0.01;
-    temp = bwmorph(temp, 'fill');
+    %temp = laplace(temp,1);
+    %temp = temp > 0.01;
+    %temp = bwmorph(temp, 'fill');
     
     %temp = fillholes(temp, 2);
     
