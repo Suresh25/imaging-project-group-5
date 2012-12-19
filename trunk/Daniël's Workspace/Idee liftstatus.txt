@@ -1,0 +1,31 @@
+1:
+if(there is an object with min/max or center in lift boundaries)
+	if(one w/LiftThreshold)
+		"Lift closed"
+	else if(two w/LiftThreshold)
+		"Lift opening"
+	else if(null w/LiftThreshold)
+		"Lift open"
+
+2:
+function liftStatus = liftstat()
+img = liftRGBThresholdImage;
+msr = measure(img, {center}, [], 1, 0, 0);
+for msr : j
+	x = j.x;
+	y = j.y;
+	if(east<=x.center<=west && south<=y.center<=north)
+		count = count+1;
+	end
+end
+	
+if(count == 1)
+	gui_handle.liftStatus = "Lift closed";
+end
+if(count == 2)
+	gui_handle.liftStatus = "Lift opening";
+end
+if(count == 0)
+	gui_handle.liftStatus = "Lift open";
+end
+	
