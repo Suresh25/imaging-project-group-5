@@ -61,12 +61,12 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     global last_frame;
     
     % Init our custom global properties
-    %handles.vid = videoinput('winvideo');
-    %set(handles.vid, 'TriggerRepeat', inf);
-    %set(handles.vid, 'ReturnedColorSpace','RGB');
+    handles.vid = videoinput('winvideo');
+    set(handles.vid, 'TriggerRepeat', inf);
+    set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
-    handles.input_source = 'video';
+    handles.input_source = 'camera';
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
@@ -202,7 +202,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     while handles.analyze
         tic;
         frame = getFrame(hObject, handles);
-        %flushdata(handles.vid);
+        flushdata(handles.vid);
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
