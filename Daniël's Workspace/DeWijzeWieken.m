@@ -71,7 +71,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
     handles.lift_segmented = 0;
-    handles.history = [0, 0, 0];
+    handles.history = [0, 0];
     handles.traffic_total = 0;
     handles.traffic_out = 0;
     handles.traffic_in = 0;
@@ -79,7 +79,6 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
-    handles.classificationPreviousObjectList = [];
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
@@ -188,19 +187,30 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     handles = guidata(hObject);
     initViewports(handles, frame);
     
+    minX = handles.lift_bounds(1,1);
+    minY = handles.lift_bounds(1,2);
+    maxX = handles.lift_bounds(2,1);
+    maxY = handles.lift_bounds(2,2);
+    
+    img = handles.lift_segmented;
+    new = dip_image(zeros(240,320));
+    x = drawpolygon(new,[minX,minY; maxX,minY; maxX,maxY; minX,maxY],255,'closed');
+    x = dilation((x > 1),8,'rectangular');
+    x = img | x;
+    displayFiltered(handles, toMatrix(3,x,x,x));
+    
     while handles.analyze
-        %tic;
+        tic;
         frame = getFrame(hObject, handles);
         flushdata(handles.vid);
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
-        analyze(enhanced, hObject, handles);
+        %analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
         displayMain(handles, frame);
         displayOriginal(handles, frame);
-        displayFiltered(handles, toMatrix(3, enhanced{1}));
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
         displayStats(handles);
         
@@ -209,7 +219,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         %save frame for next itteration
         last_frame = last_frame_temp;
-        %toc;
+        toc;
     end
     
     if strcmp(handles.input_source, 'camera')
