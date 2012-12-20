@@ -191,7 +191,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     while handles.analyze
         tic;
         frame = getFrame(hObject, handles);
-        flushdata(handles.vid);
+        %flushdata(handles.vid);
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
