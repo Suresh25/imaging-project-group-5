@@ -53,7 +53,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % varargin   command line arguments to DeWijzeWieken (see VARARGIN)
     
     % Reset the image-aquisition toolkit
-    %imaqreset;
+    imaqreset;
     
     % Init DIPLib
     dipstart;
@@ -61,9 +61,9 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     global last_frame;
     
     % Init our custom global properties
-    %handles.vid = videoinput('winvideo');
-    %set(handles.vid, 'TriggerRepeat', inf);
-    %set(handles.vid, 'ReturnedColorSpace','RGB');
+    handles.vid = videoinput('winvideo');
+    set(handles.vid, 'TriggerRepeat', inf);
+    set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
     handles.input_source = 'camera';
@@ -80,6 +80,12 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
     last_frame = 0;
+    
+    %%%%%%%%% Removed because propably not used anymore
+    %Init empty array that will contain list of previous objects in image
+    %for classification
+    %handles.classificationPreviousObjectList = [];
+    %%%%%%%%%
     
     % Update handles structure
     guidata(hObject, handles);
@@ -115,11 +121,11 @@ function initViewports(handles, frame)
 function frame = getFrame(hObject, handles)
     if strcmp(handles.input_source, 'camera')
         frame = getdata(handles.vid, 1);
-    end
-    if strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
+    elseif strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
          frame = read(handles.loaded_video, handles.lv_frame_index);
          if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
             handles.lv_frame_index = handles.lv_frame_index + 1;
+            
             set(handles.slider1, 'Value', handles.lv_frame_index);
          end
          % Maintain frame-rate
@@ -181,17 +187,35 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     handles = guidata(hObject);
     initViewports(handles, frame);
     
+    minX = handles.lift_bounds(1,1);
+    minY = handles.lift_bounds(1,2);
+    maxX = handles.lift_bounds(2,1);
+    maxY = handles.lift_bounds(2,2);
+    
+    disp(minX);
+    disp(minY);
+    disp(maxX);
+    disp(maxY);
+    
+    img = handles.lift_segmented;
+    new = dip_image(zeros(240,320));
+    x = drawpolygon(new,[minX,minY; maxX,minY; maxX,maxY; minX,maxY],255,'closed');
+    x = dilation((x > 1),8,'rectangular');
+    %x = img | x;
+    displayFiltered(handles, toMatrix(3,x,x,x));
+    
     while handles.analyze
         tic;
         frame = getFrame(hObject, handles);
+        flushdata(handles.vid);
+        
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
-        analyze(enhanced, hObject, handles);
+        %analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
         displayMain(handles, frame);
         displayOriginal(handles, frame);
-        displayFiltered(handles, toMatrix(3, enhanced{1}));
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
         displayStats(handles);
         
@@ -250,6 +274,7 @@ function captureCalib(hObject, handles)
         handles.lift_bounds = [minX, minY; maxX, maxY];
     end
     guidata(hObject, handles);
+    
 
 % --- Executes on button press in backgroundCatch.
 function backgroundCatch_Callback(hObject, eventdata, handles)

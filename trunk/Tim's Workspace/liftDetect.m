@@ -1,18 +1,27 @@
-function res = myLiftDetect(img)
-    thres = 6;
-    derY = dyy(img);
-    derX = dxx(img);
+% liftDetect(img)
+% img = Joined rgb dipimage.
+% Returns: DIPImage (with lifts segmented)
+
+function seg_img = liftDetect(img)
+    r = img{1};
+    g = img{2};
+    b = img{3};
     
-    derYR = derY{1} > thres;
-    derXR = derX{1} > thres;
-    derYG = derY{2} > thres;
-    derXG = derX{2} > thres;
-    derXB = derX{3} > thres;
-    derYB = derY{3} > thres;
-    
-    %img = derR | derG | derB;
-    %img = berosion(img,1,1,1); 
-    %res = derXG | derYG;
-    res =  derXG | derYG | derXB | derYB;
-    res = berosion(res,1,1,0);
-    res = bdilation(res,5,2,0);
+    % Color-range of lift in normalised images:
+    r_thres = [70, 240];
+    g_thres = [40, 100];
+    b_thres = [40, 100];
+
+    % Generate rgb channels post threshold filter:
+    rt = threshold(r, 'double', r_thres);
+    gt = threshold(g, 'double', g_thres);
+    bt = threshold(b, 'double', b_thres);
+
+    filtered_img = rt & gt & bt;
+
+    % Closing and re-label:
+    filtered_img = dilation(filtered_img, 4, 'elliptic');
+    filtered_img = erosion(filtered_img, 4, 'elliptic');
+
+    seg_img = filtered_img;
+    % labeled_img = label(filtered_img, Inf, 200, 0);
