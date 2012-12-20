@@ -4,13 +4,8 @@
 % Returns: Segmented image (with person segments)
 
 function segmented = segmentPerson(img, gui_handle)
-    global last_frame;    
-    liftBackground = gui_handle.calib_img;
-    
-    %liftBackground = gaussf(liftBackground,0.01,'best');
-    %last_frame = gaussf(last_frame,0.01,'best');
-    %img = gaussf(img,0.01,'best');
     % calculate difference between frame and saved background
+    liftBackground = gui_handle.calib_img; 
     diff1 = img - liftBackground;
     diff2 = liftBackground - img;
     diff_thres = 25;
@@ -27,11 +22,12 @@ function segmented = segmentPerson(img, gui_handle)
     %temp = dilation(temp, 7, 'elliptic');
     
     % calculate movements
+    global last_frame;
     diffS = abs(img - last_frame);
     
-    r = diffS{1} > 20;
-    g = diffS{2} > 20;
-    b = diffS{3} > 20;
+    r = diffS{1} > 25;
+    g = diffS{2} > 25;
+    b = diffS{3} > 25;
     diff = r | g | b;
     
     %NC = [0 0 1 0 0; 0 0 1 0 0; 0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0; 1 1 1 1 1; 1 1 1 1 1; 0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0; 0 0 1 0 0; 0 0 1 0 0];
@@ -41,16 +37,13 @@ function segmented = segmentPerson(img, gui_handle)
     
     diff = dilation_se(diff, dip_image(NC, 'bin'));
     %diff = erosion(diff, 20, 'elliptic');
-    %diff = dilation(diff, 20, 'elliptic');
+    diff = dilation(diff, 20, 'elliptic');
     
     %combine both calculations
     temp = dip_image(diff .* temp, 'bin');
     temp = erosion (temp, 7, 'elliptic');
     temp = dilation(temp, 7, 'elliptic');
     
-    %temp = laplace(temp,1);
-    %temp = temp > 0.01;
-    %temp = bwmorph(temp, 'fill');
     
     %temp = fillholes(temp, 2);
     
