@@ -7,19 +7,34 @@
 %          relevant statistics will be displayed on it.
 
 function handle = compute(info, gui_handle)
+    function n = mostCommon(seconds, m)
+        if strcmp(m, 'in')
+            i = 1;
+        else
+            i = 2;
+        end
+        fps = 5;
+        frames = round(fps * seconds);
+        if frames > size(gui_handle.history, 1)
+            frames = size(gui_handle.history, 1);
+        end
+        n = mode(gui_handle.history(1:frames, i));
+    end
+    
     deltaIn = 0;
     deltaOut = 0;
-    currentIn = info(1);
-    currentOut = info(2);
+    currentIn = mostCommon(0.5, 'in');
+    currentOut = mostCommon(0.5, 'out');
     
-    gui_handle.traffic_inview = currentIn + currentOut;
+    gui_handle.traffic_inview = info(1) + 0.1 * info(2);
     
-    approxIn = mode(gui_handle.history(:, 1));
+    approxIn = mostCommon(6, 'in');
+    approxOut = mostCommon(6, 'out');
     
     if approxIn > 0 && currentIn == 0
         deltaIn = approxIn;
-    elseif currentIn > 0
-        deltaOut = approxIn;
+    elseif approxIn == 0 && currentIn > 0
+        deltaOut = currentIn;
     end
     
     gui_handle.traffic_in = gui_handle.traffic_in + deltaIn;
@@ -42,3 +57,4 @@ function handle = compute(info, gui_handle)
     end
     
     handle = gui_handle;
+end

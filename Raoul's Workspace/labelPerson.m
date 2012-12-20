@@ -4,4 +4,4 @@
 
 function labeled = labelPerson(img)
     % PLACEHOLDER:
-    labeled = label(img, 2, 200, 0);
+    labeled = label(img, 2, 10000, 0);
