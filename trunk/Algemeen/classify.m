@@ -23,6 +23,15 @@ function info = classify(img, gui_handle)
         minY = msr(i).Minimum(2);
         maxX = msr(i).Maximum(1);
         maxY = msr(i).Maximum(2);
+        % Shrink the box a bit to compensate for shadow-segmentation:
+        ratio = 0.3;
+        dx = maxX - minX;
+        dy = maxY - minY;
+        minX = minX + dx * ratio;
+        maxX = maxX - dx * ratio;
+        minY = minY + dy * ratio;
+        maxY = maxY - dy * ratio;
+        
         if west < minX && north < minY && east > maxX && south > maxY
             inside = inside + 1;
         else

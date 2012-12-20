@@ -79,6 +79,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
+    handles.persons_labeled = 0;
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
@@ -192,11 +193,9 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     maxX = handles.lift_bounds(2,1);
     maxY = handles.lift_bounds(2,2);
     
-    img = handles.lift_segmented;
     new = dip_image(zeros(240,320));
     x = drawpolygon(new,[minX,minY; maxX,minY; maxX,maxY; minX,maxY],255,'closed');
     x = dilation((x > 1),8,'rectangular');
-    x = img | x;
     displayFiltered(handles, toMatrix(3,x,x,x));
     
     while handles.analyze
@@ -206,10 +205,13 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
-        %analyze(enhanced, hObject, handles);
+        analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
-        displayMain(handles, frame);
+        % original = joinchannels('rgb', dip_image(frame));
+        decor = decoratePersons(newim(320, 240), handles);
+        
+        displayMain(handles, toMatrix(3, decor, decor));
         displayOriginal(handles, frame);
         displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
         displayStats(handles);
@@ -269,7 +271,37 @@ function captureCalib(hObject, handles)
         handles.lift_bounds = [minX, minY; maxX, maxY];
     end
     guidata(hObject, handles);
-    
+
+% Returns a cell array containing the bounding-box of each label in the
+% given image.
+function boxes = getBoundries(labeled_img)
+    msr = measure(labeled_img, [], {'Minimum', 'Maximum'}, [], ...
+                  1, 0, 0);
+    boxes = cell(1, size(msr, 1));
+    for i=1:size(msr, 1)
+        minX = msr(i).Minimum(1);
+        minY = msr(i).Minimum(2);
+        maxX = msr(i).Maximum(1);
+        maxY = msr(i).Maximum(2);
+        box = [minX, minY; maxX, maxY];
+        boxes{i} = box;
+    end
+
+% Draw rectangles representing the bounding-box around detected persons
+% on a given img.
+function decorated = decoratePersons(img, handles)
+    bounding_boxes = getBoundries(handles.persons_labeled);
+    for i=1:size(bounding_boxes, 2),
+        box = bounding_boxes{i};
+        topleft = [box(1,1), box(1,2)];
+        topright = [box(2,1), box(1,2)];
+        botleft = [box(1,1), box(2,2)];
+        botright = [box(2,1), box(2,2)];
+        coords = [topleft; topright; botright; botleft];
+        img = drawpolygon(img, coords, 1, 'closed');
+    end
+    decorated = img;
+
 
 % --- Executes on button press in backgroundCatch.
 function backgroundCatch_Callback(hObject, eventdata, handles)
@@ -284,8 +316,10 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     % hObject    handle to loadVideoButton (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    disp('Loading video...');
+    
     [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
-   
+    
     handles.input_source = 'file';
     handles.loaded_video = videoLoader(FileName);
     handles.lv_frame_index = 1;
@@ -296,6 +330,8 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     captureCalib(hObject, handles);
     
     guidata(hObject, handles);
+    
+    disp('Video loaded.');
 
 % --- Executes on slider movement.
 function slider1_Callback(hObject, eventdata, handles)
