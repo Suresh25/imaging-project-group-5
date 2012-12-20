@@ -37,9 +37,9 @@ function handle = compute(info, gui_handle)
     approxOut = mostCommon(6, 'out');
     approxTotal = approxIn + approxOut;
     
-    %if approxIn > 0 && currentIn == 0 && approxTotal > currentTotal
+    %if currentIn == 0 && approxIn > 0 && currentOut <= approxOut
     %    deltaIn = approxIn;
-    %end
+    %send
     if currentIn < approxIn && currentOut > approxOut
         deltaOut = approxIn - currentIn;
     end
