@@ -24,7 +24,7 @@ function info = classify(img, gui_handle)
         maxX = msr(i).Maximum(1);
         maxY = msr(i).Maximum(2);
         % Shrink the box a bit to compensate for shadow-segmentation:
-        ratio = 0.2;
+        ratio = 0.3;
         dx = maxX - minX;
         dy = maxY - minY;
         minX = minX + dx * ratio;

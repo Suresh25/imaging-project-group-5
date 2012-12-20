@@ -264,7 +264,8 @@ function captureCalib(hObject, handles)
     end
     guidata(hObject, handles);
 
-    
+% Returns a cell array containing the bounding-box of each label in the
+% given image.
 function boxes = getBoundries(labeled_img)
     msr = measure(labeled_img, [], {'Minimum', 'Maximum'}, [], ...
                   1, 0, 0);
@@ -277,7 +278,9 @@ function boxes = getBoundries(labeled_img)
         box = [minX, minY; maxX, maxY];
         boxes{i} = box;
     end
-   
+
+% Draw rectangles representing the bounding-box around detected persons
+% on a given img.
 function decorated = decoratePersons(img, handles)
     bounding_boxes = getBoundries(handles.persons_labeled);
     for i=1:size(bounding_boxes, 2),

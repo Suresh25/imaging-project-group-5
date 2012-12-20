@@ -15,33 +15,41 @@ function handle = compute(info, gui_handle)
         end
         fps = 5;
         frames = round(fps * seconds);
-        if frames > size(gui_handle.history, 1)
-            frames = size(gui_handle.history, 1);
+        endIndex = size(gui_handle.history, 1);
+        startIndex = endIndex - frames;
+        if startIndex < 1
+            startIndex = 1;
         end
-        n = mode(gui_handle.history(1:frames, i));
+        
+        disp(gui_handle.history(startIndex:endIndex, i));
+        n = mode(gui_handle.history(startIndex:endIndex, i));
     end
     
     deltaIn = 0;
     deltaOut = 0;
     currentIn = mostCommon(0.5, 'in');
     currentOut = mostCommon(0.5, 'out');
+    currentTotal = currentIn + currentOut;
     
-    gui_handle.traffic_inview = info(1) + 0.1 * info(2);
+    gui_handle.traffic_inview = info(1) + info(2);
     
     approxIn = mostCommon(6, 'in');
     approxOut = mostCommon(6, 'out');
+    approxTotal = approxIn + approxOut;
     
-    if approxIn > 0 && currentIn == 0
-        deltaIn = approxIn;
-    elseif approxIn == 0 && currentIn > 0
-        deltaOut = currentIn;
+    %if approxIn > 0 && currentIn == 0 && approxTotal > currentTotal
+    %    deltaIn = approxIn;
+    %end
+    if currentIn < approxIn && currentOut > approxOut
+        deltaOut = approxIn - currentIn;
     end
     
     gui_handle.traffic_in = gui_handle.traffic_in + deltaIn;
     gui_handle.traffic_out = gui_handle.traffic_out + deltaOut;
     gui_handle.traffic_total = gui_handle.traffic_total + ... 
                                deltaIn + deltaOut;
-    gui_handle.debug = num2str(size(gui_handle.history, 1));
+    gui_handle.debug = mat2str([currentIn, currentOut;
+                                approxIn, approxOut]);
     
     if deltaIn || deltaOut
         gui_handle.history = [0, 0];
