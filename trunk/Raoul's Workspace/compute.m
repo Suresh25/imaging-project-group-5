@@ -37,9 +37,9 @@ function handle = compute(info, gui_handle)
     approxOut = mostCommon(6, 'out');
     approxTotal = approxIn + approxOut;
     
-    %if approxIn > 0 && currentIn == 0 && approxTotal > currentTotal
-    %    deltaIn = approxIn;
-    %end
+    if currentIn == 0 && approxIn > 0 && currentOut > approxOut
+        deltaIn = approxIn;
+    end
     if currentIn < approxIn && currentOut > approxOut
         deltaOut = approxIn - currentIn;
     end
@@ -51,17 +51,21 @@ function handle = compute(info, gui_handle)
     gui_handle.debug = mat2str([currentIn, currentOut;
                                 approxIn, approxOut]);
     
-    if deltaIn || deltaOut
-        gui_handle.history = [0, 0];
+    if deltaIn
+        gui_handle.history{1} = [0, 0];
+    end
+    if deltaOut
+        gui_handle.history{2} = [0, 0];
     end
     
-    gui_handle.history = [gui_handle.history; info];
+    gui_handle.history{1} = [gui_handle.history{1}; info];
+    gui_handle.history{2} = [gui_handle.history{2}; info];
     
     % Keep history in a fixed size:
     cache_size = 30;  % Has to be >= 2
-    history_size = size(gui_handle.history, 1);
+    history_size = size(gui_handle.history{1}, 1);
     if history_size > cache_size
-        gui_handle.history = gui_handle.history(2: history_size, :);
+        gui_handle.history{1} = gui_handle.history(2: history_size, :);
     end
     
     handle = gui_handle;
