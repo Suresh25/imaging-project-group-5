@@ -71,7 +71,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
     handles.lift_segmented = 0;
-    handles.history = [0, 0];
+    handles.history = [0, 0, 0];
     handles.traffic_total = 0;
     handles.traffic_out = 0;
     handles.traffic_in = 0;
@@ -79,6 +79,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
+    handles.classificationPreviousObjectList = [];
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
