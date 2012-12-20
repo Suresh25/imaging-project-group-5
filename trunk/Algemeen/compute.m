@@ -21,7 +21,7 @@ function handle = compute(info, gui_handle)
             startIndex = 1;
         end
         
-        disp(gui_handle.history(startIndex:endIndex, i));
+        % disp(gui_handle.history(startIndex:endIndex, i));
         n = mode(gui_handle.history(startIndex:endIndex, i));
     end
     
