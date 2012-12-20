@@ -201,13 +201,13 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     displayFiltered(handles, toMatrix(3,x,x,x));
     
     while handles.analyze
-        tic;
+        %tic;
         frame = getFrame(hObject, handles);
         flushdata(handles.vid);
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
-        %analyze(enhanced, hObject, handles);
+        analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
         displayMain(handles, frame);
@@ -220,7 +220,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         %save frame for next itteration
         last_frame = last_frame_temp;
-        toc;
+        %toc;
     end
     
     if strcmp(handles.input_source, 'camera')

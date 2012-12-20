@@ -38,17 +38,17 @@ function info = classify(img, gui_handle, objectList)
                     end
                 end
             %Check if the object's size has increased since the previous iteration
-            else if(msr(i).size > objectList(j).size)
-                    timesGrown(i) = timesGrown(i) + 1;
+            %else if(msr(i).size > objectList(j).size)
+                    %timesGrown(i) = timesGrown(i) + 1;
                     %This if-statement might need to check how many times
                     %an object has shrunk in the meantime aswell for possibly
                     %better results
-                    if(timesGrown(i) >= 2)
-                        outside = outside + 1;
-                        disp('Person left lift, current value of outside: ')
-                        outside
-                    end
-                end
+                    %if(timesGrown(i) >= 2)
+                        %outside = outside + 1;
+                        %disp('Person left lift, current value of outside: ')
+                        %outside
+                   % end
+                %end
             end
         end
     end
