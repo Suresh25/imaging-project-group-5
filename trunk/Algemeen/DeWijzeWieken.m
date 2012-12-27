@@ -58,7 +58,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % Init DIPLib
     dipstart;
     
-    global last_frame;
+    global last_frame doors;
     
     % Init our custom global properties
     handles.vid = videoinput('winvideo');
@@ -80,6 +80,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
     handles.persons_labeled = 0;
+    handles.lift_status = '';
+    doors = [-1,-1];
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
@@ -163,6 +165,7 @@ function displayStats(handles)
          'Outgoing: ', num2str(handles.traffic_out), char(10), ...
          'Total: ', num2str(handles.traffic_total), char(10), ...
          'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Liftstatus : ', handles.lift_status, char(10), ...
          'Debug: ', handles.debug]);
     drawnow
  
@@ -207,6 +210,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         enhanced = enhance(frame, handles);
         analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
+        handles.lift_status = liftStatus(handles,frame);
         
         % original = joinchannels('rgb', dip_image(frame));
         decor = decoratePersons(newim(320, 240), handles);
