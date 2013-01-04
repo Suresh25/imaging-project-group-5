@@ -66,7 +66,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.vid, 'ReturnedColorSpace','RGB');
     
     handles.analyze = false;
-    handles.input_source = 'camera';
+    handles.input_source = 'video';
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
     handles.calib_img = 0;
@@ -79,6 +79,8 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
+    handles.lift_status = '';
+    handles.doors = [-1,-1];
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
@@ -162,6 +164,7 @@ function displayStats(handles)
          'Outgoing: ', num2str(handles.traffic_out), char(10), ...
          'Total: ', num2str(handles.traffic_total), char(10), ...
          'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Liftstatus: ', handles.lift_status, char(10), ...
          'Debug: ', handles.debug]);
     drawnow
  
@@ -192,12 +195,6 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     maxX = handles.lift_bounds(2,1);
     maxY = handles.lift_bounds(2,2);
     
-    disp(minX);
-    disp(minY);
-    disp(maxX);
-    disp(maxY);
-    
-    img = handles.lift_segmented;
     new = dip_image(zeros(240,320));
     x = drawpolygon(new,[minX,minY; maxX,minY; maxX,maxY; minX,maxY],255,'closed');
     x = dilation((x > 1),8,'rectangular');
@@ -211,6 +208,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
+        liftStatus(handles, frame, hObject);
         %analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
