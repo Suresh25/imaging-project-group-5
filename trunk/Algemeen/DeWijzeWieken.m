@@ -211,6 +211,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         handles.lift_status = liftStatus(handles,frame);
+        guidata(hObject, handles);
         
         % original = joinchannels('rgb', dip_image(frame));
         decor = decoratePersons(newim(320, 240), handles);

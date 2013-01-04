@@ -5,7 +5,11 @@
 
 function norm = normalise(img, gui_handle)
     j = img;
-
+    
+    j(:,:,1) = posterize(j(:,:,1),32);
+    j(:,:,2) = posterize(j(:,:,2),8);
+    j(:,:,3) = posterize(j(:,:,3),16);
+    
     a = dip_image(j(:,:,1));
     b = dip_image(j(:,:,2));
     c = dip_image(j(:,:,3));
