@@ -320,22 +320,29 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     % hObject    handle to loadVideoButton (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    set(handles.loadVideoButton, 'Enable', 'off');
     disp('Loading video...');
     
     [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
     
-    handles.input_source = 'file';
-    handles.loaded_video = videoLoader(FileName);
-    handles.lv_frame_index = 1;
-    set(handles.slider1, 'Min', 0, 'Max', ...
-        handles.loaded_video.NumberOfFrames, 'SliderStep', ...
-        [1 /(handles.loaded_video.NumberOfFrames/10), ...
-         1 /(handles.loaded_video.NumberOfFrames/10)]);
-    captureCalib(hObject, handles);
+    if(FileName ~= 0)
+        handles.input_source = 'file';
+        handles.loaded_video = videoLoader(FileName);
+        handles.lv_frame_index = 1;
+        set(handles.slider1, 'Min', 0, 'Max', ...
+            handles.loaded_video.NumberOfFrames, 'SliderStep', ...
+            [1 /(handles.loaded_video.NumberOfFrames/10), ...
+             1 /(handles.loaded_video.NumberOfFrames/10)]);
+        captureCalib(hObject, handles);
+
+        guidata(hObject, handles);
+
+        disp('Video loaded.');
+    else
+        disp('Canceled..');
+    end
     
-    guidata(hObject, handles);
-    
-    disp('Video loaded.');
+    set(handles.loadVideoButton, 'Enable', 'on');
 
 % --- Executes on slider movement.
 function slider1_Callback(hObject, eventdata, handles)
