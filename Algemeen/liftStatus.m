@@ -1,4 +1,4 @@
-function liftStatus(gui_handle, img_data, hObject)
+function res = liftStatus(gui_handle, img_data, hObject)
     minX = gui_handle.lift_bounds(1,1);
     minY = gui_handle.lift_bounds(1,2);
     maxX = gui_handle.lift_bounds(2,1);
@@ -35,3 +35,4 @@ function liftStatus(gui_handle, img_data, hObject)
     
     gui_handle.lift_status = status;
     guidata(hObject, gui_handle);
+    res = gui_handle;
