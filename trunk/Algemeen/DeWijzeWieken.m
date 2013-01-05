@@ -208,7 +208,7 @@ function startAnalyse_Callback(hObject, eventdata, handles)
         
         handles = guidata(hObject);
         enhanced = enhance(frame, handles);
-        liftStatus(handles, frame, hObject);
+        handles = liftStatus(handles, frame, hObject);
         analyze(enhanced, hObject, handles);
         handles = guidata(hObject);
         
