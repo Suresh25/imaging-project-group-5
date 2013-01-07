@@ -1,29 +1,37 @@
-function status = liftStatus(handles)
-    minX = handles.lift_bounds(1,1);
-    maxX = handles.lift_bounds(2,1);
-    minY = handles.lift_bounds(1,2);
-    mid = round((maxX - minX) / 2);
-    w = floor((maxX - minX) * 0.15);
-    img = handles.cframe;
-    cropped = segmentLift(img(minX:maxX, minY + 10:minY + 30));
+function update = liftStatus(gui_handle)
+    minX = gui_handle.lift_bounds(1,1);
+    minY = gui_handle.lift_bounds(1,2);
+    maxX = gui_handle.lift_bounds(2,1);
     
-    % No lift in sight
-    if sum(cropped) == 0 
-        status = handles.UNKNOWN;
-        return;
-    end
+    status = gui_handle.UNKNOWN;
     
-    midcrop = cropped(mid - w:mid + w, :);
-    se = repmat([0,1,0],15,1);
-    se = dip_image(se, 'bin');
-    edges = erosion_se(midcrop, se);
-    blob = closing(edges, 5, 'elliptic');
-    count = size(measure(blob), 1);
-    
-    if count > 0
-        status = handles.CLOSED;
-    elseif count == 0
-        status = handles.OPEN;
+    g = gui_handle.current_frame(minY:minY+30, minX:maxX,2) < 50;
+    g = erosion(g,4,'rectangular');
+    msr = measure(g, [], {'size'}, [], ...
+          1, 100, 0);
+    if size(msr, 1) == 2
+        if ~isequal(gui_handle.doors,[-1,-1])
+            thres = 70;
+            dif = gui_handle.doors-msr.Size;
+
+            if any(dif > thres)
+                status = gui_handle.OPENING;
+            else if any(dif < -thres)
+                    status = gui_handle.CLOSING;
+                else if any(msr.Size > 500)
+                        status = gui_handle.CLOSED;
+                    else
+                        status = gui_handle.OPEN;
+                    end
+                end
+            end
+        end
+        gui_handle.doors = msr.Size;
     else
-        status = handles.UNKNOWN;
+        gui_handle.doors = [100,100];
+        status = gui_handle.OPEN;
     end
+    
+    gui_handle.door_status = status;
+    update = gui_handle;
+    %guidata(hObject, gui_handle);

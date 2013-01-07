@@ -62,8 +62,10 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     
     % Constants
     handles.OPEN = 1;
-    handles.CLOSED = 2;
-    handles.UNKNOWN = 3;
+    handles.OPENING = 2;
+    handles.CLOSED = 3;
+    handles.CLOSING = 4;
+    handles.UNKNOWN = 5;
     handles.DOOR_DELAY = 1.2;  % In seconds
     
     % Init our custom global properties
@@ -81,6 +83,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.history = [0, 0, handles.UNKNOWN];
     handles.history_cap = 30;
     handles.door_status = handles.UNKNOWN;
+    handles.doors = [-1, -1];
     handles.last_open = 0;
     handles.traffic_total = 0;
     handles.traffic_out = 0;
@@ -211,14 +214,10 @@ function displayAnalysis(handles)
  
 % Update the statistics on the GUI
 function displayStats(handles)
+    stat2str = {'open', 'opening', 'closed', 'closing', 'unknown'};
     stat = handles.door_status;
-    if stat == handles.OPEN
-        statstr = 'open';
-    elseif stat == handles.CLOSED
-        statstr = 'closed';
-    else
-        statstr = 'unknown';
-    end
+    
+    statstr = stat2str{stat};
     
     set(handles.Stats1, 'String', ...
         ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
@@ -401,21 +400,31 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     % hObject    handle to loadVideoButton (see GCBO)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
+    set(handles.loadVideoButton, 'Enable', 'off');
+    disp('Loading video...');
+    
     [FileName, PathName, FilterIndex] = uigetfile('*.wmv;*.mpeg4;','Select a video to process');
-   
-    handles.input_source = 'file';
-    handles.loaded_video = videoLoader(FileName);
-    handles.fps = handles.loaded_video.FrameRate;
-    handles.history = [0, 0, handles.UNKNOWN];
-    handles.lv_frame_index = 1;
-    set(handles.slider1, 'Min', 0, 'Max', ...
-        handles.loaded_video.NumberOfFrames, 'SliderStep', ...
-        [1 /(handles.loaded_video.NumberOfFrames/10), ...
-         1 /(handles.loaded_video.NumberOfFrames/10)]);
     
-    handles = captureCalib(handles);
+    if(FileName ~= 0)
+        handles.input_source = 'file';
+        handles.loaded_video = videoLoader(FileName);
+        handles.fps = handles.loaded_video.FrameRate;
+        handles.history = [0, 0, handles.UNKNOWN];
+        handles.lv_frame_index = 1;
+        set(handles.slider1, 'Min', 0, 'Max', ...
+            handles.loaded_video.NumberOfFrames, 'SliderStep', ...
+            [1 /(handles.loaded_video.NumberOfFrames/10), ...
+             1 /(handles.loaded_video.NumberOfFrames/10)]);
+
+        handles = captureCalib(handles);
+
+        guidata(hObject, handles);
+        disp('Video loaded.');
+    else
+        disp('Canceled.');
+    end
     
-    guidata(hObject, handles);
+    set(handles.loadVideoButton, 'Enable', 'on');
 
 % --- Executes on slider movement.
 function slider1_Callback(hObject, eventdata, handles)
