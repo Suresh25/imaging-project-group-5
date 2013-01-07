@@ -7,9 +7,9 @@ function norm = normalise(img, gui_handle)
     j = img;
     
     % Posterize all layers on different scales to optimalize
-    j(:,:,1) = posterize(j(:,:,1),32);
-    j(:,:,2) = posterize(j(:,:,2),8);
-    j(:,:,3) = posterize(j(:,:,3),16);
+    j(:,:,1) = posterize(j(:,:,1),12);
+    j(:,:,2) = posterize(j(:,:,2),12);
+    j(:,:,3) = posterize(j(:,:,3),8);
     
     a = dip_image(j(:,:,1));
     b = dip_image(j(:,:,2));
