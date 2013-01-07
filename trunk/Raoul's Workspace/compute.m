@@ -6,67 +6,150 @@
 % Effects: Uses gui_handle to change properties of the GUI, so that
 %          relevant statistics will be displayed on it.
 
-function handle = compute(info, gui_handle)
-    function n = mostCommon(seconds, m)
+function update = compute(info, gui_handle)
+    function n = mostCommon(m, sec_offset, sec_duration)
         if strcmp(m, 'in')
             i = 1;
-        else
+        elseif strcmp(m, 'out')
             i = 2;
+        else
+            n = NaN;
+            return;
         end
-        fps = 5;
-        frames = round(fps * seconds);
-        endIndex = size(gui_handle.history, 1);
-        startIndex = endIndex - frames;
+        fps = gui_handle.fps;
+        offset = round(fps * sec_offset);
+        frames = round(fps * sec_duration);
+        endIndex = size(gui_handle.history, 1) - offset;
+        startIndex = endIndex - frames + 1;
         if startIndex < 1
             startIndex = 1;
         end
-        
-        disp(gui_handle.history(startIndex:endIndex, i));
-        n = mode(gui_handle.history(startIndex:endIndex, i));
+       
+        if startIndex >= endIndex
+            n = 0;
+        else
+            sample = gui_handle.history(startIndex:endIndex, i);
+            avg = sum(sample) / frames;
+            if nnz(sample) / frames <= 0.2
+                n = 0;
+            else
+                n = abs(round(avg - 0.1999));
+            end
+            disp(avg);
+        end 
     end
+    
+    gui_handle.traffic_inview = info(1) + info(2);
+     
+    gui_handle.standby_in = gui_handle.standby_in + 1;
+    gui_handle.standby_out = gui_handle.standby_out + 1;
+    okIn = gui_handle.standby_in >= gui_handle.history_cap;
+    okOut = gui_handle.standby_out >= gui_handle.history_cap;
     
     deltaIn = 0;
     deltaOut = 0;
-    currentIn = mostCommon(0.5, 'in');
-    currentOut = mostCommon(0.5, 'out');
-    currentTotal = currentIn + currentOut;
+   
+    currentStatus = info(3);
     
-    gui_handle.traffic_inview = info(1) + info(2);
     
-    approxIn = mostCommon(6, 'in');
-    approxOut = mostCommon(6, 'out');
-    approxTotal = approxIn + approxOut;
+%     lastOpen = find(gui_handle.history(:,3) == gui_handle.CLOSED, 1, 'last');
+%     if size(gui_handle.history, 1) - lastOpen < 10
+%         wasIn = nowIn;
+%     else
+%         wasIn = mostCommon('in', 0.4, 1);%mostCommon('in', 0, 3); 
+%     end
     
-    if currentIn == 0 && approxIn > 0 && currentOut > approxOut
-        deltaIn = approxIn;
+    
+%     delay = round(gui_handle.fps * gui_handle.DOOR_DELAY);
+%     
+%     tail = repmat(gui_handle.OPEN, delay, 1);
+%     expected = [gui_handle.CLOSED; tail];
+%     expected2 = [gui_handle.UNKNOWN; tail];
+%     
+%     to = size(gui_handle.history, 1);
+%     from = to - delay;
+%     if from <= 0
+%         from = 1;
+%     end
+    timeSinceOpen = (gui_handle.frame_index - gui_handle.last_open) ...
+                     / gui_handle.fps;
+    if timeSinceOpen == gui_handle.DOOR_DELAY 
+        inLiftAtStart = info(1); %mostCommon('in', 0, 0.8);
+        gui_handle.snapshot = [inLiftAtStart, ...
+                               gui_handle.traffic_in, ...
+                               gui_handle.traffic_out];
     end
-    if currentIn < approxIn && currentOut > approxOut
-        deltaOut = approxIn - currentIn;
-    end
     
+    inLiftAtStart = gui_handle.snapshot(1);
+    inAtStart = gui_handle.snapshot(2);
+    outAtStart = gui_handle.snapshot(3);
+    inThisRound = -1;
+    outThisRound = -1;
+    
+    nowOut = mostCommon('out', 0, 1);%mostCommon('out', 0, 1);
+    wasOut = mostCommon('out', 1, 1);%mostCommon('out', 0, 2);
+    nowIn = mostCommon('in', 0, 1); %mostCommon('in', 0, 1.5);
+    if timeSinceOpen < gui_handle.DOOR_DELAY + 1.4
+        wasIn = inLiftAtStart;
+    else
+        wasIn = mostCommon('in', 0.4, 1);%mostCommon('in', 0, 3);
+    end
+    nowTotal = nowIn + nowOut;
+    wasTotal = wasIn + wasOut;
+    
+    if ~isequal(gui_handle.snapshot, [-1, -1, -1]);
+        inThisRound = gui_handle.traffic_in - inAtStart;
+        outThisRound = gui_handle.traffic_out - outAtStart;
+        % Inaccuracy detected:
+        %if outThisRound > inLiftAtStart
+        %    gui_handle.snapshot(1) = outThisRound;
+        %    inLiftAtStart = outThisRound;
+        %end
+        
+        %if nowIn + outThisRound - inThisRound ~= inLiftAtStart
+        %    gui_handle.snapshot(1) = nowIn + outThisRound - inThisRound;
+        %    inLiftAtStart = nowIn + outThisRound - inThisRound;
+        %end
+
+        if currentStatus == gui_handle.OPEN && nowIn < wasIn ...
+           && outThisRound < (max([wasIn, inLiftAtStart]) - nowIn) ...
+           && nowOut > wasOut
+            deltaOut = wasIn - nowIn;
+        end
+        if currentStatus == gui_handle.OPEN && nowIn > wasIn ...
+           && inThisRound < (nowIn - wasIn)
+            deltaIn = nowIn - wasIn;
+        end
+       
+        if currentStatus == gui_handle.CLOSED
+            gui_handle.snapshot = [-1, -1, -1];
+        end
+    end
+       
     gui_handle.traffic_in = gui_handle.traffic_in + deltaIn;
     gui_handle.traffic_out = gui_handle.traffic_out + deltaOut;
     gui_handle.traffic_total = gui_handle.traffic_total + ... 
                                deltaIn + deltaOut;
-    gui_handle.debug = mat2str([currentIn, currentOut;
-                                approxIn, approxOut]);
+    gui_handle.debug = mat2str([nowIn, nowOut;
+                                wasIn, wasOut;
+                          inLiftAtStart, inThisRound;
+                          outThisRound, NaN]);
     
     if deltaIn
-        gui_handle.history{1} = [0, 0];
+        gui_handle.standby_in = 0;
     end
     if deltaOut
-        gui_handle.history{2} = [0, 0];
+        gui_handle.standby_out = 0;
     end
     
-    gui_handle.history{1} = [gui_handle.history{1}; info];
-    gui_handle.history{2} = [gui_handle.history{2}; info];
+    gui_handle.history = [gui_handle.history; info];
     
     % Keep history in a fixed size:
-    cache_size = 30;  % Has to be >= 2
-    history_size = size(gui_handle.history{1}, 1);
-    if history_size > cache_size
-        gui_handle.history{1} = gui_handle.history(2: history_size, :);
+    history_size = size(gui_handle.history, 1);
+   
+    if history_size > gui_handle.history_cap
+        gui_handle.history = gui_handle.history(2: history_size, :);
     end
     
-    handle = gui_handle;
+    update = gui_handle;
 end

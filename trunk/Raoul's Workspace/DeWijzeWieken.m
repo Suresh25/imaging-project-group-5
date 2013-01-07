@@ -60,6 +60,12 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     
     global last_frame;
     
+    % Constants
+    handles.OPEN = 1;
+    handles.CLOSED = 2;
+    handles.UNKNOWN = 3;
+    handles.DOOR_DELAY = 1.2;  % In seconds
+    
     % Init our custom global properties
     handles.vid = videoinput('winvideo');
     set(handles.vid, 'TriggerRepeat', inf);
@@ -67,19 +73,34 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     
     handles.analyze = false;
     handles.input_source = 'camera';
+    handles.fps = 5;
+    handles.frame_index = 1;
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
-    handles.calib_img = 0;
-    handles.lift_segmented = 0;
-    handles.history = [0, 0];
+    handles.lv_fps_helper = tic;
+    handles.history = [0, 0, handles.UNKNOWN];
+    handles.history_cap = 30;
+    handles.door_status = handles.UNKNOWN;
+    handles.last_open = 0;
     handles.traffic_total = 0;
     handles.traffic_out = 0;
     handles.traffic_in = 0;
     handles.traffic_inview = 0;
+    handles.snapshot = [-1, -1, -1];
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
+    handles.current_frame = 0;  % Matrix form
+    handles.last_frame = 0;  % Matrix form
+    handles.cframe = 0;  % RGB DIPimage
+    handles.calib_img = 0;
+    handles.lift_segmented = 0;
+    handles.lift_labeled = 0;
+    handles.lift_msr = 0;
+    handles.persons_segmented = 0;
     handles.persons_labeled = 0;
+    handles.persons_msr = 0;
+    handles.persons_l2c = zeros(1, 10);
     last_frame = 0;
     
     %%%%%%%%% Removed because propably not used anymore
@@ -119,22 +140,33 @@ function initViewports(handles, frame)
 
 % Retrieves a single frame from source (camera or file) as specified by 
 % the handles.input_source variable.
-function frame = getFrame(hObject, handles)
+function update = getFrame(handles)
     if strcmp(handles.input_source, 'camera')
         frame = getdata(handles.vid, 1);
     elseif strcmp(handles.input_source,'file') && handles.loaded_video ~= 0
-         frame = read(handles.loaded_video, handles.lv_frame_index);
-         if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
+        % Maintain frame-rate
+        duration = toc(handles.lv_fps_helper);
+        t = 0;
+        delay = (1 / handles.loaded_video.FrameRate);
+        if duration < delay
+            t = delay - duration;
+        end
+        pause(t);
+        handles.lv_fps_helper = tic;
+        % End frame-rate maintenance
+        
+        frame = read(handles.loaded_video, handles.lv_frame_index);
+        if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
             handles.lv_frame_index = handles.lv_frame_index + 1;
-            
             set(handles.slider1, 'Value', handles.lv_frame_index);
-         end
-         % Maintain frame-rate
-         pause(1 / handles.loaded_video.FrameRate);
+        end
     end   
+    handles.last_frame = handles.current_frame;
+    handles.current_frame = frame;
+    handles.cframe = joinchannels('rgb', frame);
+    handles.frame_index = handles.frame_index + 1;
+    update = handles;
     
-    guidata(hObject, handles);
-
 % Displays a given frame on given viewport.
 function displayFrame(axes, frame)
     h = get(axes, 'Children');
@@ -156,14 +188,57 @@ function displayFiltered(handles, frame)
 function displayProcessed(handles, frame)
     displayFrame(handles.axes4, frame);
 
+function displaySegmented(handles)
+    lift = handles.lift_segmented;
+    singles = newim(handles.persons_labeled);
+    groups = newim(handles.persons_labeled);
+    for i=1:size(handles.persons_msr, 1)
+        if handles.persons_l2c(i) > 1
+            groups = groups + (handles.persons_labeled == i);
+        else
+            singles = singles + (handles.persons_labeled == i);
+        end
+    end
+    frame = toMatrix(3, lift, singles, groups);
+    displayFiltered(handles, frame);
+
+function displayAnalysis(handles)
+    bg = handles.cframe;
+    decor = decorateLift(bg, handles);
+    decor = decoratePersons(decor, handles);
+    frame = dip_array(decor);
+    displayMain(handles, frame);
+ 
 % Update the statistics on the GUI
 function displayStats(handles)
+    stat = handles.door_status;
+    if stat == handles.OPEN
+        statstr = 'open';
+    elseif stat == handles.CLOSED
+        statstr = 'closed';
+    else
+        statstr = 'unknown';
+    end
+    
     set(handles.Stats1, 'String', ...
         ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
          'Outgoing: ', num2str(handles.traffic_out), char(10), ...
          'Total: ', num2str(handles.traffic_total), char(10), ...
          'In view: ', num2str(handles.traffic_inview), char(10), ...
+         'Status: ', statstr, char(10), ...
          'Debug: ', handles.debug]);
+    
+    histLen = size(handles.history, 1);
+    frames = 5;
+    if histLen < frames
+        frames = histLen - 1;
+    end
+%     set(handles.axes4, 'XLimMode', 'manual');
+%     set(handles.axes4, 'YLimMode', 'manual');
+%     set(handles.axes4, 'YTickLabelMode', 'manual');
+%     set(handles.axes4, 'XLim', [0, frames]);
+%     set(handles.axes4, 'YLim', [0, 5]);
+    bar(handles.axes4, handles.history(histLen - frames + 1:histLen, 1:2), 1.2);
     drawnow
  
 % --- Executes on button press in startAnalyse.
@@ -176,40 +251,46 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     
     % Flag analysis start
     handles.analyze = true;
+    guidata(hObject, handles);
     
     % Start video retrieval and initialise viewports
     if strcmp(handles.input_source, 'camera')
         start(handles.vid);
     end
   
-    captureCalib(hObject, handles);
-    handles = guidata(hObject);
-    frame = getFrame(hObject, handles);
-    handles = guidata(hObject);
-    initViewports(handles, frame);
+    handles = captureCalib(handles);
+    %handles = guidata(hObject);
+    handles = getFrame(handles);
+    %handles = guidata(hObject);
+    initViewports(handles, handles.current_frame);
     
     while handles.analyze
         tic;
-        frame = getFrame(hObject, handles);
+        handles = getFrame(handles);
         %flushdata(handles.vid);
         
-        handles = guidata(hObject);
-        enhanced = enhance(frame, handles);
-        analyze(enhanced, hObject, handles);
-        handles = guidata(hObject);
+        %handles = guidata(hObject);
+        handles = enhance(handles);
+        handles = analyze(handles);
+        %handles = guidata(hObject);
         
-       % original = joinchannels('rgb', dip_image(frame));
-       % disp(max(max(max(frame))))
-        decor = decoratePersons(newim(320, 240), handles);
+        %original = joinchannels('rgb', dip_image(frame));
+        %decor = decoratePersons(original, handles);
         
-        displayMain(handles, toMatrix(3, decor, decor));
-        displayOriginal(handles, frame);
-        displayFiltered(handles, toMatrix(3, enhanced{1}));
-        displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
+        %displayMain(handles, dip_array(decor));
+        displayOriginal(handles, handles.current_frame);
+        displaySegmented(handles);
+        displayAnalysis(handles);
+        %displayFiltered(handles, toMatrix(3, enhanced{1}));
+        %displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
+        %displayProcessed(handles, handles.current_frame - handles.last_frame);
         displayStats(handles);
         
         % Update handles
-        handles = guidata(hObject);
+        updates = guidata(hObject);
+        handles.analyze = updates.analyze;
+        %guidata(hObject, handles);
+        
         
         %save frame for next itteration
         last_frame = last_frame_temp;
@@ -246,15 +327,14 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     delete(hObject);
 
 % Capture calibration image and save it.
-function captureCalib(hObject, handles)
-    frame = getFrame(hObject, handles);
-    handles = guidata(hObject);
-    handles.calib_img = normalise(frame, handles);
+function update = captureCalib(handles)
+    handles = getFrame(handles);
+    handles.calib_img = handles.cframe;
     handles.lift_segmented = segmentLift(handles.calib_img);
     handles.lift_labeled = labelLift(handles.lift_segmented);
-    
-    msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
-                  1, 300, 0);
+    handles.lift_msr = measure(handles.lift_labeled, [], {'Minimum', 'Maximum'}, [], ...
+                               1, 300, 0);
+    msr = handles.lift_msr; 
     if size(msr, 1) > 0
         minX = msr(1).Minimum(1);
         minY = msr(1).Minimum(2);
@@ -262,27 +342,41 @@ function captureCalib(hObject, handles)
         maxY = msr(1).Maximum(2);
         handles.lift_bounds = [minX, minY; maxX, maxY];
     end
-    guidata(hObject, handles);
+    update = handles;
 
 % Returns a cell array containing the bounding-box of each label in the
 % given image.
-function boxes = getBoundries(labeled_img)
-    msr = measure(labeled_img, [], {'Minimum', 'Maximum'}, [], ...
-                  1, 0, 0);
-    boxes = cell(1, size(msr, 1));
-    for i=1:size(msr, 1)
+function boxes = getPersonBoundries(handles)
+    msr = handles.persons_msr;
+    nP = nnz(handles.persons_l2c);
+    pIndices = find(handles.persons_l2c);
+    boxes = cell(1, nP);
+    for j=1:nP
+        i = pIndices(j);
         minX = msr(i).Minimum(1);
         minY = msr(i).Minimum(2);
         maxX = msr(i).Maximum(1);
         maxY = msr(i).Maximum(2);
         box = [minX, minY; maxX, maxY];
-        boxes{i} = box;
+        boxes{j} = box;
     end
+
+% Draw rectangle representing the bounding-box around detected lift
+% on a given img.
+function decorated = decorateLift(img, handles)
+    box = handles.lift_bounds;
+    topleft = [box(1,1), box(1,2)];
+    topright = [box(2,1), box(1,2)];
+    botleft = [box(1,1), box(2,2)];
+    botright = [box(2,1), box(2,2)];
+    coords = [topleft; topright; botright; botleft];
+    img{1} = drawpolygon(img{1}, coords, 255, 'closed');
+    decorated = img;
 
 % Draw rectangles representing the bounding-box around detected persons
 % on a given img.
 function decorated = decoratePersons(img, handles)
-    bounding_boxes = getBoundries(handles.persons_labeled);
+    bounding_boxes = getPersonBoundries(handles);
     for i=1:size(bounding_boxes, 2),
         box = bounding_boxes{i};
         topleft = [box(1,1), box(1,2)];
@@ -290,7 +384,7 @@ function decorated = decoratePersons(img, handles)
         botleft = [box(1,1), box(2,2)];
         botright = [box(2,1), box(2,2)];
         coords = [topleft; topright; botright; botleft];
-        img = drawpolygon(img, coords, 1, 'closed');
+        img{2} = drawpolygon(img{2}, coords, 255, 'closed');
     end
     decorated = img;
 
@@ -311,12 +405,15 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
    
     handles.input_source = 'file';
     handles.loaded_video = videoLoader(FileName);
+    handles.fps = handles.loaded_video.FrameRate;
+    handles.history = [0, 0, handles.UNKNOWN];
     handles.lv_frame_index = 1;
     set(handles.slider1, 'Min', 0, 'Max', ...
         handles.loaded_video.NumberOfFrames, 'SliderStep', ...
         [1 /(handles.loaded_video.NumberOfFrames/10), ...
          1 /(handles.loaded_video.NumberOfFrames/10)]);
-    captureCalib(hObject, handles);
+    
+    handles = captureCalib(handles);
     
     guidata(hObject, handles);
 
@@ -330,6 +427,9 @@ function slider1_Callback(hObject, eventdata, handles)
     %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
     handles.lv_frame_index = round(get(hObject,'Value'));
+    if handles.lv_frame_index == 0
+        handles.lv_frame_index = 1;
+    end
 
     guidata(hObject, handles);
 
