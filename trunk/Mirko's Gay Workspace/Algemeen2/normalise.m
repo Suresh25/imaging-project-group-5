@@ -6,6 +6,7 @@
 function norm = normalise(img, gui_handle)
     j = img;
     
+    % Posterize all layers on different scales to optimalize
     j(:,:,1) = posterize(j(:,:,1),32);
     j(:,:,2) = posterize(j(:,:,2),8);
     j(:,:,3) = posterize(j(:,:,3),16);
@@ -14,6 +15,8 @@ function norm = normalise(img, gui_handle)
     b = dip_image(j(:,:,2));
     c = dip_image(j(:,:,3));
 
+    % ============== OLD NORMALIZE PARTS (for refference) ===================
+    
     %in = dip_image(j);
     %=== last normalize, with 2 background images===
     % if back ~= 'a'
@@ -74,7 +77,7 @@ function norm = normalise(img, gui_handle)
     % dm(:,:,2) = b;
     % dm(:,:,3) = c;
 
-
     %=== Returning the normalized view
     %norm = dm;
+    
     norm = joinchannels('rgb', a, b, c);
