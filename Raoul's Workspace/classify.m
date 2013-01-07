@@ -4,11 +4,11 @@
 % Returns: Int array of length 2. First element is the # of persons in
 %          the lift. Second element is the # of persons out the lift
 function [info, update] = classify(gui_handle) 
-    function b = doorsAreOpen
-        timeSinceOpen = (gui_handle.frame_index - gui_handle.last_open) ...
-                         / gui_handle.fps;
-        b = timeSinceOpen >= gui_handle.DOOR_DELAY;
-    end
+%     function b = doorsAreOpen
+%         timeSinceOpen = (gui_handle.frame_index - gui_handle.last_open) ...
+%                          / gui_handle.fps;
+%         b = timeSinceOpen >= gui_handle.DOOR_DELAY;
+%     end
 
     inside = 0;
     outside = 0;
@@ -22,7 +22,7 @@ function [info, update] = classify(gui_handle)
     south = gui_handle.lift_bounds(2, 2);
     
     prevStatus = gui_handle.door_status;
-    checkStatus = false;
+%     checkStatus = false;
     
     % Check per person if its box lies inside the boundries of the elevator: 
     for i = 1 : size(msr, 1)
@@ -70,30 +70,30 @@ function [info, update] = classify(gui_handle)
 
             if west < shardWest && north < minYs && east > shardEast && south > maxYs
                 inside = inside + 1;
-                checkStatus = prevStatus == gui_handle.CLOSED;
+%                 checkStatus = prevStatus == gui_handle.CLOSED;
             else
                 outside = outside + 1;
             end
         end
     end
     
-    checkStatus = checkStatus || ...
-                  prevStatus == gui_handle.UNKNOWN || ...
-                 (prevStatus == gui_handle.OPEN && ...
-                  mod(gui_handle.lv_frame_index, 4) == 0);
-    if checkStatus
-        status = liftStatus(gui_handle);
-    else
-        status = prevStatus;
-    end
-    
-    if status == gui_handle.CLOSED || ~doorsAreOpen
+%     checkStatus = checkStatus || ...
+%                   prevStatus == gui_handle.UNKNOWN || ...
+%                  (prevStatus == gui_handle.OPEN && ...
+%                   mod(gui_handle.lv_frame_index, 4) == 0);
+%     if checkStatus
+%         status = liftStatus(gui_handle);
+%     else
+%         status = prevStatus;
+%     end
+    gui_handle = liftStatus(gui_handle);
+    status = gui_handle.door_status;
+    if status == gui_handle.CLOSING || status == gui_handle.CLOSED
         inside = 0;
     end
     if status == gui_handle.OPEN && prevStatus == gui_handle.CLOSED
         gui_handle.last_open = gui_handle.frame_index;
     end
-    gui_handle.door_status = status;
     
     info = [inside, outside, status];
     update = gui_handle;
