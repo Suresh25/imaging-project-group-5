@@ -1,35 +1,61 @@
+% liftstatus(gui_handle)
+% gui_handle = the handles of a GUI.
+% Returns: current lift-status and an updated GUI handle.
+% Effects: updates the doors' size in gui_handle.
 function [status, update] = liftStatus(gui_handle)
+    % get the boundingbox
     minX = gui_handle.lift_bounds(1,1);
     minY = gui_handle.lift_bounds(1,2);
     maxX = gui_handle.lift_bounds(2,1);
     
+    height = int8(0.25*(maxX-minX));
+    
+    % default status: unknown
     status = gui_handle.UNKNOWN;
     
-    g = gui_handle.current_frame(minY:minY+30, minX:maxX,2) < 50;
+    % use color green for thresholding (2nd layer in current_frame)
+    g = gui_handle.current_frame(minY:minY+height, minX:maxX, 2) < 50;
+    % use an erosion to get rid of noise
     g = erosion(g,4,'rectangular');
+    
     msr = measure(g, [], {'size'}, [], ...
           1, 100, 0);
+      
+    % check if there are two doors visible
     if size(msr, 1) == 2
         if ~isequal(gui_handle.doors,[-1,-1])
             thres = 70;
-            dif = gui_handle.doors-msr.Size;
+            
+            % calculate the difference between the previous doors' size and
+            % the current size
+            dif = gui_handle.doors - msr.Size;
 
-            if any(dif > thres)
+            % if the previous doors are more visible than the current
+            % doors, the doors are opening
+            if any(dif >= thres)
                 status = gui_handle.OPENING;
-            else if any(dif < -thres)
-                    status = gui_handle.CLOSING;
-                else if any(msr.Size > 500)
-                        status = gui_handle.CLOSED;
-                    else
-                        status = gui_handle.OPEN;
-                    end
-                end
+                
+            % if the previous doors are less visible than the current
+            % doors, the doors are closing
+            elseif any(dif < -thres)
+                status = gui_handle.CLOSING;
+                    
+            % if the doors are large enough, the doors must be closed
+            elseif any(msr.Size > 500)
+                status = gui_handle.CLOSED;
+                    
+            % .. the doors must be open otherwise
+            else
+                status = gui_handle.OPEN;
             end
         end
+        % update the doors' size to the current size for next iterations
         gui_handle.doors = msr.Size;
     else
-        gui_handle.doors = [100,100];
+        % if no doors are detected, the doors must be open
         status = gui_handle.OPEN;
+        gui_handle.doors = [100,100];
     end
     
+    % update gui_handle
     update = gui_handle;
