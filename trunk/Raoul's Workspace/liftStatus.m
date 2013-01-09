@@ -1,8 +1,8 @@
 % liftstatus(gui_handle)
 % gui_handle = the handles of a GUI.
-% Returns: an updated GUI handle.
-% Effects: updates the lift_status and doors' size in gui_handle
-function update = liftStatus(gui_handle)
+% Returns: current lift-status and an updated GUI handle.
+% Effects: updates the doors' size in gui_handle.
+function [status, update] = liftStatus(gui_handle)
     % get the boundingbox
     minX = gui_handle.lift_bounds(1,1);
     minY = gui_handle.lift_bounds(1,2);
@@ -20,6 +20,7 @@ function update = liftStatus(gui_handle)
     
     msr = measure(g, [], {'size'}, [], ...
           1, 100, 0);
+      
     % check if there are two doors visible
     if size(msr, 1) == 2
         if ~isequal(gui_handle.doors,[-1,-1])
@@ -39,11 +40,11 @@ function update = liftStatus(gui_handle)
             elseif any(dif < -thres)
                 status = gui_handle.CLOSING;
                     
-            % if the doors are large enough, the doors must be closed..
+            % if the doors are large enough, the doors must be closed
             elseif any(msr.Size > 500)
                 status = gui_handle.CLOSED;
                     
-            % ..otherwise the doors must be open
+            % .. the doors must be open otherwise
             else
                 status = gui_handle.OPEN;
             end
@@ -56,6 +57,5 @@ function update = liftStatus(gui_handle)
         gui_handle.doors = [100,100];
     end
     
-    % update gui_handle and return the updated version
-    gui_handle.door_status = status;
+    % update gui_handle
     update = gui_handle;
