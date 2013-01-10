@@ -88,7 +88,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.traffic_inview = 0;
     handles.output = hObject;
     handles.debug = '';
-    handles.lift_bounds = [0, 0; 100, 100];
+    handles.lift_bounds = [1, 1; 100, 100];
     handles.current_frame = 0;  % Matrix form
     handles.last_frame = 0;  % Matrix form
     handles.cframe = 0;  % RGB DIPimage
@@ -313,6 +313,12 @@ function update = captureCalib(handles)
         minY = msr(1).Minimum(2);
         maxX = msr(1).Maximum(1);
         maxY = msr(1).Maximum(2);
+        if minX < 1 || minY < 1 || maxX > 320 || maxY > 240
+            minX = 1;
+            minY = 1;
+            maxX = 100;
+            maxY = 100;
+        end
         handles.lift_bounds = [minX, minY; maxX, maxY];
     end
     update = handles;
