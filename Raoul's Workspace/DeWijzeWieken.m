@@ -22,7 +22,7 @@ function varargout = DeWijzeWieken(varargin)
 
     % Edit the above text to modify the response to help DeWijzeWieken
 
-    % Last Modified by GUIDE v2.5 06-Dec-2012 11:22:26
+    % Last Modified by GUIDE v2.5 07-Jan-2013 20:30:41
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -58,38 +58,34 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     % Init DIPLib
     dipstart;
     
-    global last_frame;
-    
     % Constants
     handles.OPEN = 1;
     handles.OPENING = 2;
     handles.CLOSED = 3;
     handles.CLOSING = 4;
     handles.UNKNOWN = 5;
-    handles.DOOR_DELAY = 1.2;  % In seconds
     
     % Init our custom global properties
     handles.vid = videoinput('winvideo');
     set(handles.vid, 'TriggerRepeat', inf);
     set(handles.vid, 'ReturnedColorSpace','RGB');
     
-    handles.analyze = false;
-    handles.input_source = 'camera';
+    handles.analyze = false;  % Controls the main loop
+    handles.input_source = 'camera';  % 'file' | 'camera' 
     handles.fps = 5;
     handles.frame_index = 1;
     handles.loaded_video = 0;
     handles.lv_frame_index = 1;
     handles.lv_fps_helper = tic;
     handles.history = [0, 0, handles.UNKNOWN];
-    handles.history_cap = 30;
     handles.door_status = handles.UNKNOWN;
-    handles.doors = [-1, -1];
-    handles.last_open = 0;
+    handles.prev_door_status = handles.UNKNOWN;
+    handles.stat2str = {'open', 'opening', 'closed', 'closing', 'unknown'};
+    handles.doors = [-1, -1];  % Helper variable for liftStatus()
     handles.traffic_total = 0;
     handles.traffic_out = 0;
     handles.traffic_in = 0;
     handles.traffic_inview = 0;
-    handles.snapshot = [-1, -1, -1];
     handles.output = hObject;
     handles.debug = '';
     handles.lift_bounds = [0, 0; 100, 100];
@@ -104,13 +100,7 @@ function DeWijzeWieken_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.persons_labeled = 0;
     handles.persons_msr = 0;
     handles.persons_l2c = zeros(1, 10);
-    last_frame = 0;
-    
-    %%%%%%%%% Removed because propably not used anymore
-    %Init empty array that will contain list of previous objects in image
-    %for classification
-    %handles.classificationPreviousObjectList = [];
-    %%%%%%%%%
+    handles.barframes = 20;
     
     % Update handles structure
     guidata(hObject, handles);
@@ -134,12 +124,14 @@ function varargout = DeWijzeWieken_OutputFcn(hObject, eventdata, handles)
 function initViewports(handles, frame)
     ports = [ handles.axes1, ... 
               handles.axes2, ... 
-              handles.axes3, ... 
-              handles.axes4 ];
+              handles.axes3 ];
     for i = 1:size(ports, 2)
         axes(ports(i));
         image(frame);
+        set(ports(i), 'xTickLabel', []);
+        set(ports(i), 'yTickLabel', []);
     end
+    
 
 % Retrieves a single frame from source (camera or file) as specified by 
 % the handles.input_source variable.
@@ -156,7 +148,7 @@ function update = getFrame(handles)
         end
         pause(t);
         handles.lv_fps_helper = tic;
-        % End frame-rate maintenance
+        % End of frame-rate maintenance
         
         frame = read(handles.loaded_video, handles.lv_frame_index);
         if handles.lv_frame_index < handles.loaded_video.NumberOfFrames
@@ -214,11 +206,9 @@ function displayAnalysis(handles)
  
 % Update the statistics on the GUI
 function displayStats(handles)
-    stat2str = {'open', 'opening', 'closed', 'closing', 'unknown'};
     stat = handles.door_status;
-    
-    statstr = stat2str{stat};
-    
+    statstr = handles.stat2str{stat};
+   
     set(handles.Stats1, 'String', ...
         ['Ingoing: ', num2str(handles.traffic_in), char(10), ...
          'Outgoing: ', num2str(handles.traffic_out), char(10), ...
@@ -228,16 +218,15 @@ function displayStats(handles)
          'Debug: ', handles.debug]);
     
     histLen = size(handles.history, 1);
-    frames = 5;
+    frames = handles.barframes;
     if histLen < frames
         frames = histLen - 1;
     end
-%     set(handles.axes4, 'XLimMode', 'manual');
-%     set(handles.axes4, 'YLimMode', 'manual');
-%     set(handles.axes4, 'YTickLabelMode', 'manual');
-%     set(handles.axes4, 'XLim', [0, frames]);
-%     set(handles.axes4, 'YLim', [0, 5]);
+    
     bar(handles.axes4, handles.history(histLen - frames + 1:histLen, 1:2), 1.2);
+    xlim(handles.axes4, [1 handles.barframes]);
+    ylim(handles.axes4, [0 4]);
+    
     drawnow
  
 % --- Executes on button press in startAnalyse.
@@ -246,8 +235,6 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
    
-    global last_frame last_frame_temp;
-    
     % Flag analysis start
     handles.analyze = true;
     guidata(hObject, handles);
@@ -258,41 +245,28 @@ function startAnalyse_Callback(hObject, eventdata, handles)
     end
   
     handles = captureCalib(handles);
-    %handles = guidata(hObject);
     handles = getFrame(handles);
-    %handles = guidata(hObject);
     initViewports(handles, handles.current_frame);
     
     while handles.analyze
         tic;
         handles = getFrame(handles);
-        %flushdata(handles.vid);
         
-        %handles = guidata(hObject);
+        if strcmp(handles.input_source, 'camera')
+            flushdata(handles.vid);
+        end
+        
         handles = enhance(handles);
         handles = analyze(handles);
-        %handles = guidata(hObject);
-        
-        %original = joinchannels('rgb', dip_image(frame));
-        %decor = decoratePersons(original, handles);
-        
-        %displayMain(handles, dip_array(decor));
+       
         displayOriginal(handles, handles.current_frame);
         displaySegmented(handles);
         displayAnalysis(handles);
-        %displayFiltered(handles, toMatrix(3, enhanced{1}));
-        %displayProcessed(handles, toMatrix(3, enhanced{2}, enhanced{2}));
-        %displayProcessed(handles, handles.current_frame - handles.last_frame);
         displayStats(handles);
         
         % Update handles
         updates = guidata(hObject);
         handles.analyze = updates.analyze;
-        %guidata(hObject, handles);
-        
-        
-        %save frame for next itteration
-        last_frame = last_frame_temp;
         toc;
     end
     
@@ -407,7 +381,7 @@ function loadVideoButton_Callback(hObject, eventdata, handles)
     
     if(FileName ~= 0)
         handles.input_source = 'file';
-        handles.loaded_video = videoLoader(FileName);
+        handles.loaded_video = VideoReader(FileName);
         handles.fps = handles.loaded_video.FrameRate;
         handles.history = [0, 0, handles.UNKNOWN];
         handles.lv_frame_index = 1;
@@ -453,4 +427,3 @@ function slider1_CreateFcn(hObject, eventdata, handles)
     if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor',[.9 .9 .9]);
     end
-

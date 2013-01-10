@@ -14,7 +14,7 @@ function update = analyze(gui_handle)
                                      2, 0, 0);
     
     [info, gui_handle] = classify(gui_handle);
-    gui_handle = compute2(info, gui_handle);
+    gui_handle = compute(info, gui_handle);
     
     % Update handles and history:
     update = gui_handle;
