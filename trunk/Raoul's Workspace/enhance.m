@@ -4,12 +4,13 @@
 % Returns: normalised & segmented image with lift- and person-segments.
 
 function update = enhance(gui_handle)
-    %normalised = normalise(img_data, gui_handle);
+    gui_handle.nframe = normalise(gui_handle);
     
-    %save normalised frame
-    %global last_frame_temp;
-    %last_frame_temp = normalised;
+    mirko = 0;
+    if mirko
+        gui_handle.persons_segmented = segmentPerson2(gui_handle);
+    else
+        gui_handle.persons_segmented = segmentPerson(gui_handle);
+    end
     
-    %segments = segment(gui_handle., gui_handle);
-    gui_handle.persons_segmented = segmentPerson(gui_handle);
     update = gui_handle;

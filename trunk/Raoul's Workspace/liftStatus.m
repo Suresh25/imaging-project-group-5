@@ -7,8 +7,9 @@ function [status, update] = liftStatus(gui_handle)
     minX = gui_handle.lift_bounds(1,1);
     minY = gui_handle.lift_bounds(1,2);
     maxX = gui_handle.lift_bounds(2,1);
+    maxY = gui_handle.lift_bounds(2,2);
     
-    height = int8(0.25*(maxX-minX));
+    height = int8(0.2 *(maxY-minY));
     
     % default status: unknown
     status = gui_handle.UNKNOWN;
